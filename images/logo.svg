@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <rect width="400" height="400" rx="80" fill="#1A1C23" />
+  
+  <defs>
+    <linearGradient id="italy" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="33.3%" stop-color="#009246" />
+      <stop offset="33.3%" stop-color="#ffffff" />
+      <stop offset="66.6%" stop-color="#ffffff" />
+      <stop offset="66.6%" stop-color="#ce2b37" />
+    </linearGradient>
+    
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect x="90" y="80" width="220" height="240" rx="16" fill="#282A36" stroke="#44475A" stroke-width="4"/>
+  
+  <path d="M 92 100 Q 92 82 110 82 L 290 82 Q 308 82 308 100 L 308 110 L 92 110 Z" fill="#44475A"/>
+  
+  <circle cx="115" cy="96" r="5" fill="#ff5f56"/>
+  <circle cx="135" cy="96" r="5" fill="#ffbd2e"/>
+  <circle cx="155" cy="96" r="5" fill="#27c93f"/>
+
+  <rect x="110" y="130" width="80" height="6" rx="3" fill="#44475A" opacity="0.6"/>
+  <rect x="110" y="150" width="50" height="6" rx="3" fill="#44475A" opacity="0.6"/>
+
+  <path d="M 240 120 L 130 225 L 195 225 L 160 295 L 270 185 L 205 185 Z" fill="url(#italy)" filter="url(#glow)"/>
+</svg>
