@@ -3,5 +3,6 @@
   "render_readme": true,
   "filename": "italy-energy-bill-card.js",
   "iot_class": "Calculated",
-  "description": "Home Assistant customizable card for Italian energy bill estimation"
+  "description": "Home Assistant customizable card for Italian energy bill estimation",
+  "country": ["IT"]
 }
