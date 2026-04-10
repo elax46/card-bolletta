@@ -44,7 +44,7 @@ La card prende i tuoi consumi, applica i costi della materia prima, oneri, perdi
 
 ### Metodo 1: Tramite HACS (Consigliato)
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=elax46&repository=https%3A%2F%2Fgithub.com%2Felax46%2Fcard-bolletta)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=elax46&repository=card-bolletta)
 
 
 1. Apri **HACS** in Home Assistant.
