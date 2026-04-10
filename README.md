@@ -1,5 +1,8 @@
 
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/integration)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/elax46/card-bolletta)](https://github.com/elax46/card-bolletta/releases/latest)
 [![CC BY-NC-SA 4.0][cc-by-nc-sa-shield]][cc-by-nc-sa]
+![GitHub last commit](https://img.shields.io/github/last-commit/elax46/card-bolletta)
 
 [cc-by-nc-sa]: http://creativecommons.org/licenses/by-nc-sa/4.0/
 [cc-by-nc-sa-image]: https://licensebuttons.net/l/by-nc-sa/4.0/88x31.png
