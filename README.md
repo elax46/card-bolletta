@@ -1,20 +1,33 @@
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/integration)
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/elax46/card-bolletta)](https://github.com/elax46/card-bolletta/releases/latest)
-[![CC BY-NC-SA 4.0][cc-by-nc-sa-shield]][cc-by-nc-sa]
-![GitHub last commit](https://img.shields.io/github/last-commit/elax46/card-bolletta)
+<p align="center">
+  <img src="images/banner.png" alt="Card Bolletta" width="100%">
+</p>
 
-[cc-by-nc-sa]: http://creativecommons.org/licenses/by-nc-sa/4.0/
-[cc-by-nc-sa-image]: https://licensebuttons.net/l/by-nc-sa/4.0/88x31.png
-[cc-by-nc-sa-shield]: https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg
+<p align="center">
+  <a href="https://github.com/hacs/integration"><img src="https://img.shields.io/badge/HACS-Default-41BDF5.svg" alt="HACS Badge"></a>
+  <a href="https://github.com/elax46/card-bolletta/releases/latest"><img src="https://img.shields.io/github/v/release/elax46/card-bolletta" alt="GitHub release"></a>
+  <a href="https://github.com/elax46/card-bolletta/commits/main"><img src="https://img.shields.io/github/last-commit/elax46/card-bolletta" alt="Last Commit"></a>
+  <a href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img src="https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg" alt="License Badge"></a>
+</p>
 
+---
 
 <div align="center">
-  <img src="images/logo.svg" alt="Card Bolletta ⚡️🇮🇹" width="150">
-  <h1>Card Bolletta ⚡️🇮🇹</h1>
-  <p>Una custom card per Home Assistant pensata appositamente per calcolare e stimare la bolletta elettrica italiana direttamente in tempo reale. 
-La card prende i tuoi consumi, applica i costi della materia prima, oneri, perdite di rete, spread, IVA e canone TV, fornendoti una stima accurata del costo del mese corrente. Inoltre, offre una comoda finestra di statistiche per confrontare i dati storici e i consumi dei mesi precedenti.</p>
+  <img src="images/logo.svg" alt="Card Bolletta ⚡️🇮🇹" width="120">
+  <h1>Card Bolletta⚡️🇮🇹</h1>
+  
+  **La tua bolletta elettrica, finalmente trasparente e in tempo reale.**
 </div>
+
+<br>
+
+Una custom card per **Home Assistant** progettata specificamente per il mercato elettrico italiano. Non limitarti a vedere i kWh: trasforma i consumi in costi reali includendo ogni singola voce della bolletta italiana.
+
+### ✨ Perché usarla?
+* **Calcolo Reale:** Include Materia Prima, Perdite di Rete, Oneri di Sistema, Accise, IVA e Canone TV.
+* **Supporto Multi-Fascia:** Gestione automatica delle fasce orarie **F1, F2 e F3**.
+* **Statistiche Avanzate:** Confronta i dati storici e analizza la ripartizione dei costi tra quota fissa e variabile.
+* **Design Flessibile:** Nuovo layout **Ultra-Compact** per dashboard minimaliste e una vista dettagliata per i "power user".
 
 ---
 
