@@ -21,12 +21,20 @@ La card prende i tuoi consumi, applica i costi della materia prima, oneri, perdi
 ## 📸 Screenshots
 
 <p align="center">
-  <img src="images/card-main.png" width="45%" alt="Vista Principale">
+  <img src="images/card-main.png" width="45%" alt="Vista Principale Standard">
   <img src="images/card-stats.png" width="45%" alt="Statistiche Dettagliate">
 </p>
 
 <p align="center">
-  <i>A sinistra la vista principale, a destra il dettaglio delle statistiche e della ripartizione costi.</i>
+  <i>A sinistra la vista principale standard, a destra il dettaglio delle statistiche e della ripartizione costi.</i>
+</p>
+
+<p align="center">
+  <img src="images/card.gif" width="45%" alt="Preview Scheda Statistiche">
+</p>
+
+<p align="center">
+  <i>Preview della scheda statistiche</i>
 </p>
 
 
@@ -37,30 +45,6 @@ La card prende i tuoi consumi, applica i costi della materia prima, oneri, perdi
 * **Calcolo Completo:** Tiene conto di Spread, Costi di Trasporto, Oneri di Sistema, Accise, PCV, Quota Potenza, IVA e Perdite di Rete.
 * **Finestra Statistiche:** Un pop-up integrato che mostra il breakdown completo della bolletta (Imposte, Energia, Trasporto, ecc.) e il confronto con il mese precedente.
 * **Auto-rilevamento Mese Precedente:** Legge in automatico l'attributo `last_period` dei tuoi Utility Meter per dirti quanto hai speso il mese scorso.
-
----
-
-## 📦 Installazione
-
-### Metodo 1: Tramite HACS (Consigliato)
-
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=elax46&repository=card-bolletta)
-
-
-1. Apri **HACS** in Home Assistant.
-2. Vai su **Frontend** (Interfaccia).
-3. Clicca sui tre puntini in alto a destra e seleziona **Repository personalizzati**.
-4. Incolla l'URL di questa repository e seleziona come categoria **Lovelace**.
-5. Clicca su **Aggiungi** e poi su **Scarica**.
-6. Ricarica la pagina del tuo browser.
-
-### Metodo 2: Installazione Manuale
-
-1. Scarica il file `italy-energy-bill-card.js`.
-2. Copia il file nella cartella `/config/www/` del tuo Home Assistant (creala se non esiste).
-3. Vai in Home Assistant: **Impostazioni** -> **Plance** -> **Risorse** (clicca sui 3 puntini in alto a destra se non lo vedi).
-4. Aggiungi una risorsa con URL: `/local/italy-energy-bill-card.js` e tipo di risorsa: **Modulo JavaScript**.
-5. Ricarica la pagina.
 
 ---
 
@@ -79,7 +63,30 @@ Nel caso in cui hai un contratto a prezzo variabile, basata sul PUN, ti consigli
 
 ---
 
-## Installazione
+## 📦 Installazione
+
+### Metodo 1: Tramite HACS [(In Attesa di approvazione)](https://github.com/hacs/default/pull/6892)
+
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=elax46&repository=card-bolletta)
+
+
+1. Apri **HACS** in Home Assistant.
+2. Vai su **Frontend** (Interfaccia).
+3. Clicca sui tre puntini in alto a destra e seleziona **Repository personalizzati**.
+4. Incolla l'URL di questo repository `https://github.com/elax46/card-bolletta` e seleziona come categoria **Lovelace**.
+5. Clicca su **Aggiungi** e poi su **Scarica**.
+6. Ricarica la pagina del tuo browser.
+
+
+### Metodo 2: Installazione Manuale
+
+1. Scarica il file `italy-energy-bill-card.js`.
+2. Copia il file nella cartella `/config/www/` del tuo Home Assistant (creala se non esiste).
+3. Vai in Home Assistant: **Impostazioni** -> **Plance** -> **Risorse** (clicca sui 3 puntini in alto a destra se non lo vedi).
+4. Aggiungi una risorsa con URL: `/local/italy-energy-bill-card.js` e tipo di risorsa: **Modulo JavaScript**.
+5. Ricarica la pagina.
+
+## Utilizzo
 
 Il modo più semplice per usare la card è tramite l'interfaccia grafica (Editor Visivo):
 
