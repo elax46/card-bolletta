@@ -122,25 +122,30 @@ Se preferisci l'editor di codice o vuoi copiare/incollare configurazioni preimpo
 
 ```yaml
 type: custom:italy-energy-bill-card
-title: Calcolo Bolletta
+consumo_entity: sensor.monthly_consumption
+p1_val: 0.09
+quota_fissa_mese: 13.96
+title: Costo energia
 modo_consumo: ent
-consumo_entity: sensor.energia_mensile
+consumo_val: 321
+perdite_rete: 10
+spread: 0.0123
+canone_tv: 9
 tipo_costo: mono
 modo_p1: val
-p1_val: 0.125
-spread: 0.015
-trasporto: 0.009
-oneri: 0.025
-accise: 0.0227
-pcv: 12
-fissi_rete: 1.8
-contatore_kw: 4.5
-prezzo_kw: 1.98
-canone_tv: 9
-iva: 10
-perdite_rete: 10
-consumo_giornaliero_entity: sensor.energia_giornaliera
-consumo_annuale_entity: sensor.energia_annuale
+trasporto: 0.018
+oneri: 0.0229
+accise: 0.0206
+pcv: 6.1
+fissi_rete: 1.91
+contatore_kw: "3"
+grid_options:
+  rows: auto
+  columns: 12
+layout: standard
+layout_compatto: true
+bonus_enabled: true
+bonus_valore_giorno: 0.51
 ```
 
 ### Tabella dei Parametri YAML
@@ -163,6 +168,27 @@ consumo_annuale_entity: sensor.energia_annuale
 | `iva` | Aliquota IVA applicata (%) | 10 (o 22) |
 | `perdite_rete` | Perdite di rete applicate alla mat. prima (%) | 10 |
 | `consumo_giornaliero_entity` | (Opzionale) Storico per le statistiche | es. `sensor.consumo_oggi` |
+| `bonus_enabled` | (Opzionale) Bonus Sociale | es. `bonus_enabled: true/false` |
+| `bonus_valore_giorno` | (Opzionale) Bonus giornaliero applicato per POD | es. `0.40` per il valore specifico fare riferimento alla tabella sul sito [Arera](https://www.arera.it/consumatori/bonus-sociale/bonus-sociale-per-disagio-economico/a-quanto-ammontano) |
+
+Ecco il testo pronto per essere copiato nel tuo file `README.md`. Ho usato una formattazione pulita con dei blocchi di citazione per far risaltare l'esempio numerico.
+
+---
+
+## 💡 Nota sul Calcolo Dinamico (Bonus Sociale e Totale)
+
+La card è progettata per essere **dinamica** e riflettere la spesa reale accumulata fino al momento esatto in cui la consulti. 
+
+A differenza di una bolletta statica, la card aggiorna il calcolo del **Bonus Sociale ARERA** in modalità "pro-rata" (giorno per giorno). Questo evita di vedere un totale falsato all'inizio del mese e permette di monitorare l'andamento della spesa in tempo reale.
+
+### Esempio di calcolo
+Se la card mostra un valore che sembra non corrispondere alla semplice sottrazione del bonus mensile intero, è perché sta ragionando sulla maturazione giornaliera:
+
+> **Situazione ipotetica:**
+> - **Giorno attuale:** 12 del mese X (quindi 12 giorni di bonus maturati).
+> - **Sconto maturato:** $0,51€ \times 12 \text{ giorni} = \mathbf{6,12€}$
+
+Questa logica garantisce che il risparmio cresca proporzionalmente insieme ai tuoi consumi durante tutto l'arco del mese.
 
 ## 💻 Sviluppo
 

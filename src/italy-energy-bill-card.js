@@ -118,7 +118,17 @@ class ItalyEnergyBillCardEditor extends LitElement {
           <div style="flex:1;"><div class="label">Perdite Rete (%)</div><input type="number" .value="${this._config.perdite_rete !== undefined ? this._config.perdite_rete : 10}" .configValue="${"perdite_rete"}" @input="${this._valueChanged}" class="styled-input"></div>
         </div>
 
-        <div class="section">6. Sensori Storici (Opzionali)</div>
+        <div class="section">6. Bonus Sociale ARERA</div>
+        <div class="row" style="align-items: center; justify-content: space-between; margin-bottom: 10px;">
+          <div class="label" style="margin:0;">Abilita Bonus</div>
+          <ha-switch .checked="${this._config.bonus_enabled}" .configValue="${"bonus_enabled"}" @change="${this._valueChanged}"></ha-switch>
+        </div>
+        ${this._config.bonus_enabled ? html`
+          <div class="label">Valore Giornaliero Sconto (€/giorno)</div>
+          <input type="number" step="0.0001" .value="${this._config.bonus_valore_giorno !== undefined ? this._config.bonus_valore_giorno : 0}" .configValue="${"bonus_valore_giorno"}" @input="${this._valueChanged}" class="styled-input">
+        ` : ''}
+
+        <div class="section">7. Sensori Storici (Opzionali)</div>
         <ha-entity-picker label="Consumo Giornaliero" .hass="${this.hass}" .value="${this._config.consumo_giornaliero_entity}" .configValue=${"consumo_giornaliero_entity"} @value-changed="${this._valueChanged}"></ha-entity-picker>
         <ha-entity-picker label="Consumo Settimanale" .hass="${this.hass}" .value="${this._config.consumo_settimanale_entity}" .configValue=${"consumo_settimanale_entity"} @value-changed="${this._valueChanged}"></ha-entity-picker>
         <ha-entity-picker label="Consumo Trimestrale" .hass="${this.hass}" .value="${this._config.consumo_trimestrale_entity}" .configValue=${"consumo_trimestrale_entity"} @value-changed="${this._valueChanged}"></ha-entity-picker>
@@ -175,7 +185,7 @@ class ItalyEnergyBillCard extends LitElement {
   static getConfigElement() { return document.createElement("italy-energy-bill-card-editor"); }
 
   setConfig(config) {
-    this.config = { title: "Costo Energia", tipo_costo: "mono", iva: 10, perdite_rete: 10, canone_tv: 0, contatore_kw: 3, prezzo_kw: 1.98, layout_compatto: false, ...config };
+    this.config = { title: "Costo Energia", tipo_costo: "mono", iva: 10, perdite_rete: 10, canone_tv: 0, contatore_kw: 3, prezzo_kw: 1.98, layout_compatto: false, bonus_enabled: false, bonus_valore_giorno: 0, ...config };
   }
 
   _toggleStats() {
@@ -214,6 +224,12 @@ class ItalyEnergyBillCard extends LitElement {
         }
       }
     }
+
+    const bonusAbilitato = this.config.bonus_enabled || false;
+    const bonusGiorno = parseFloat(this.config.bonus_valore_giorno) || 0;
+    const oggi = new Date();
+    const giornoCorrente = oggi.getDate();
+    const scontoBonusMaturato = bonusAbilitato ? (bonusGiorno * giornoCorrente) : 0;
 
     const hasHistoricalSensors = 
       this.config.consumo_giornaliero_entity || 
@@ -267,7 +283,9 @@ class ItalyEnergyBillCard extends LitElement {
     const spesaImposte = (consumo * accise) + (consumo * oneri);
     const imponibileAttuale = spesaEnergia + spesaTrasporto + spesaImposte;
     const quotaIva = imponibileAttuale * (parseFloat(this.config.iva) / 100);
-    const totaleCorrente = imponibileAttuale + quotaIva + canoneTV;
+    
+    const totaleCorrenteOriginale = imponibileAttuale + quotaIva + canoneTV;
+    const totaleCorrente = totaleCorrenteOriginale - scontoBonusMaturato;
     const costoMedioKwh = consumo > 0 ? ((imponibileAttuale + quotaIva) / consumo) : 0;
 
     const stimaCostoStorico = (valKwh) => {
@@ -328,6 +346,15 @@ class ItalyEnergyBillCard extends LitElement {
               <div class="footer-item"><ha-icon icon="mdi:cash-lock" class="icon-fissi"></ha-icon><span class="footer-text">Fissi: ${totaleFissi.toFixed(2)}€</span></div>
               <div class="footer-item"><ha-icon icon="mdi:chart-line" class="icon-spread"></ha-icon><span class="footer-text">Extra: +${totaleVariabiliExtra.toFixed(4)}</span></div>
             </div>
+
+            ${bonusAbilitato ? html`
+            <div class="footer" style="border-top: none; padding-top: 5px; margin-top: 5px;">
+              <div class="footer-item">
+                <ha-icon icon="mdi:hand-heart" style="color: #4caf50;"></ha-icon>
+                <span class="footer-text" style="color: #4caf50; font-weight: bold;">Bonus ARERA: -${scontoBonusMaturato.toFixed(2)}€</span>
+              </div>
+            </div>
+            ` : ''}
           </div>
         `}
 
@@ -343,7 +370,7 @@ class ItalyEnergyBillCard extends LitElement {
                 <div class="stats-title"><ha-icon icon="mdi:history" class="section-icon"></ha-icon> Confronto Mesi</div>
                 <div class="stats-grid grid-2">
                     <div class="stats-col">
-                        <span>Mese Scorso</span>
+                        <span>Mese Scorso (Lordo)</span>
                         <b style="font-size: 1.1rem; color: var(--secondary-text-color);">${costoMesePrecedente}</b>
                         <span style="margin-top: 2px;">(${consumoMesePrecedente !== null ? consumoMesePrecedente + ' kWh' : '--'})</span>
                     </div>
@@ -386,13 +413,25 @@ class ItalyEnergyBillCard extends LitElement {
                 </div>
 
                 <div class="stats-section">
-                <div class="stats-title"><ha-icon icon="mdi:calculator" class="section-icon"></ha-icon> Indici di Costo Attuali</div>
+                <div class="stats-title"><ha-icon icon="mdi:calculator" class="section-icon"></ha-icon> Dettaglio Sconti e Indici</div>
                 <div class="stats-grid grid-4">
                     <div class="stats-col"><span>Spread</span><b>${spread.toFixed(4)} €</b></div>
                     <div class="stats-col"><span>Commerc.</span><b>${pcv.toFixed(1)} €</b></div>
                     <div class="stats-col"><span>Mat. Prima</span><b>${prezzoMP.toFixed(3)} €</b></div>
                     <div class="stats-col highlight"><span>Costo kwh</span><b>${costoMedioKwh.toFixed(3)} €</b></div>
                 </div>
+                ${bonusAbilitato ? html`
+                  <div class="stats-grid grid-1" style="margin-top: 10px;">
+                    <div class="stats-col" style="border: 1px solid #4caf50; padding: 10px;">
+                      <span style="margin:0; font-size: 0.7rem;">Sconto Bonus ARERA (maturato finora)</span>
+                      <b style="color: #4caf50; font-size: 1.1rem;">-${scontoBonusMaturato.toFixed(2)} €</b>
+                    </div>
+                  </div>
+                ` : ''}
+                </div>
+
+                <div class="disclaimer-stats" style="font-size: 0.7rem; color: var(--secondary-text-color); text-align: center; margin-top: 15px; font-style: italic; border-top: 1px solid var(--divider-color); padding-top: 10px;">
+                  I dati storici si basano sui sensori "Utility Meter" di Home Assistant. Le stime dei periodi (Giorno/Settimana/Ecc.) sono calcolate in base al costo medio al kWh del mese in corso.
                 </div>
             </div>
           </div>
@@ -417,7 +456,6 @@ class ItalyEnergyBillCard extends LitElement {
       .stats-btn { cursor: pointer; color: var(--secondary-text-color); transition: all 0.2s ease; }
       .stats-btn:hover { color: var(--primary-color); transform: translateY(-2px); }
       
-      /* --- ICONE FOOTER COLORATE --- */
       .icon-fissi { color: #4CAF50 !important; } 
       .icon-spread { color: #2196F3 !important; }
       
@@ -442,7 +480,6 @@ class ItalyEnergyBillCard extends LitElement {
       .compact-title { font-size: 0.95rem; font-weight: 500; color: inherit !important; white-space: nowrap; }
       .compact-total { font-size: 1.1rem; font-weight: bold; color: inherit !important; }
 
-      /* MODAL E STATS */
       .stats-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); z-index: 9999; display: flex; justify-content: center; align-items: center; }
       .stats-modal-content { background: var(--card-background-color); width: 90%; max-width: 500px; padding: 20px; border-radius: 16px; max-height: 85vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
       .stats-header { display: flex; align-items: center; font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid var(--divider-color); padding-bottom: 10px; }
@@ -451,6 +488,7 @@ class ItalyEnergyBillCard extends LitElement {
       .section-icon { color: var(--primary-color); margin-right: 5px; }
       .stats-title { font-size: 0.85rem; font-weight: bold; display: flex; align-items: center; color: var(--primary-text-color); margin-bottom: 12px; text-transform: uppercase; }
       .stats-grid { display: grid; gap: 8px; }
+      .grid-1 { grid-template-columns: 1fr; }
       .grid-4 { grid-template-columns: repeat(4, 1fr); }
       .grid-2 { grid-template-columns: repeat(2, 1fr); } 
       .stats-col { display: flex; flex-direction: column; align-items: center; text-align: center; background: var(--secondary-background-color); padding: 10px 4px; border-radius: 8px; }
