@@ -171,8 +171,6 @@ bonus_valore_giorno: 0.51
 | `bonus_enabled` | (Opzionale) Bonus Sociale | es. `bonus_enabled: true/false` |
 | `bonus_valore_giorno` | (Opzionale) Bonus giornaliero applicato per POD | es. `0.40` per il valore specifico fare riferimento alla tabella sul sito [Arera](https://www.arera.it/consumatori/bonus-sociale/bonus-sociale-per-disagio-economico/a-quanto-ammontano) |
 
-Ecco il testo pronto per essere copiato nel tuo file `README.md`. Ho usato una formattazione pulita con dei blocchi di citazione per far risaltare l'esempio numerico.
-
 ---
 
 ## 💡 Nota sul Calcolo Dinamico (Bonus Sociale e Totale)
