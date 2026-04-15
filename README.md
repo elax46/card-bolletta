@@ -211,4 +211,4 @@ Vuoi contribuire al progetto, modificare la grafica o cambiare i calcoli matemat
 Ora, ogni volta che modificherai il file `.js` e salverai, Vite re-compilerà istantaneamente il codice e Home Assistant aggiornerà la card sulla plancia senza dover svuotare manualmente la cache ogni volta!
 
 ### 3. Build
-Una volta completata la fase di sviluppo puoi esegui il comando di build (`npm run build`). Questo creerà la cartella `dist/` con dentro il file `italy-energy-bill-card.js` pronto per essere caricato sulla tua istanza HA
+Una volta completata la fase di sviluppo puoi esegui il comando di build (`npm run build`). Questo genererà la cartella `dist/` con il file `italy-energy-bill-card.js` pronto per essere caricato sulla tua istanza HA
