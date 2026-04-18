@@ -184,6 +184,22 @@ class ItalyEnergyBillCard extends LitElement {
 
   static getConfigElement() { return document.createElement("italy-energy-bill-card-editor"); }
 
+
+  static getStubConfig() {
+    return {
+      title: "Costo Energia",
+      tipo_costo: "mono",
+      modo_consumo: "val",
+      consumo_val: 150,
+      p1_val: 0.10,
+      spread: 0.015,
+      pcv: 6.0,
+      contatore_kw: 3,
+      iva: 10,
+      layout_compatto: false
+    };
+  }
+
   setConfig(config) {
     this.config = { title: "Costo Energia", tipo_costo: "mono", iva: 10, perdite_rete: 10, canone_tv: 0, contatore_kw: 3, prezzo_kw: 1.98, layout_compatto: false, bonus_enabled: false, bonus_valore_giorno: 0, ...config };
   }
@@ -349,7 +365,7 @@ class ItalyEnergyBillCard extends LitElement {
 
             ${bonusAbilitato ? html`
             <div class="footer" style="border-top: none; padding-top: 5px; margin-top: 5px;">
-              <div class="footer-item">
+              <div class="footer-item" style="width: 100%; justify-content: center;">
                 <ha-icon icon="mdi:hand-heart" style="color: #4caf50;"></ha-icon>
                 <span class="footer-text" style="color: #4caf50; font-weight: bold;">Bonus ARERA: -${scontoBonusMaturato.toFixed(2)}€</span>
               </div>
@@ -422,7 +438,7 @@ class ItalyEnergyBillCard extends LitElement {
                 </div>
                 ${bonusAbilitato ? html`
                   <div class="stats-grid grid-1" style="margin-top: 10px;">
-                    <div class="stats-col" style="border: 1px solid #4caf50; padding: 10px;">
+                    <div class="stats-col" style="border: 1px solid #4caf50; padding: 10px; align-items: center;">
                       <span style="margin:0; font-size: 0.7rem;">Sconto Bonus ARERA (maturato finora)</span>
                       <b style="color: #4caf50; font-size: 1.1rem;">-${scontoBonusMaturato.toFixed(2)} €</b>
                     </div>
@@ -505,4 +521,13 @@ class ItalyEnergyBillCard extends LitElement {
     `;
   }
 }
+
 customElements.define('italy-energy-bill-card', ItalyEnergyBillCard);
+
+window.customCards = window.customCards || [];
+window.customCards.push({
+  type: "italy-energy-bill-card",
+  name: "Card Bolletta",
+  description: "Card per il calcolo dinamico del costo dell'energia elettrica in Italia.",
+  preview: true
+});
