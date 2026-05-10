@@ -378,8 +378,8 @@ class ItalyEnergyBillCard extends LitElement {
           <div class="stats-modal">
             <div class="stats-modal-content">
                 <div class="stats-header">
-                  <ha-icon icon="mdi:close" @click="${this._toggleStats}" class="close-btn"></ha-icon>
                   <span>Statistiche e Storico</span>
+                  <ha-icon icon="mdi:close" @click="${this._toggleStats}" class="close-btn"></ha-icon>
                 </div>
                 
                 <div class="stats-section">
@@ -496,10 +496,63 @@ class ItalyEnergyBillCard extends LitElement {
       .compact-title { font-size: 0.95rem; font-weight: 500; color: inherit !important; white-space: nowrap; }
       .compact-total { font-size: 1.1rem; font-weight: bold; color: inherit !important; }
 
-      .stats-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); z-index: 9999; display: flex; justify-content: center; align-items: center; }
-      .stats-modal-content { background: var(--card-background-color); width: 90%; max-width: 500px; padding: 20px; border-radius: 16px; max-height: 85vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-      .stats-header { display: flex; align-items: center; font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid var(--divider-color); padding-bottom: 10px; }
-      .close-btn { cursor: pointer; margin-right: 10px; color: var(--secondary-text-color); }
+      .stats-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5); 
+        backdrop-filter: blur(2px);
+        z-index: 1000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        animation: fadeIn 0.3s ease-out;
+      }
+
+      .stats-modal-content {
+        background: var(--ha-card-background, var(--card-background-color, white));
+        width: 95%;
+        max-width: 500px;
+        padding: 20px;
+        border-radius: var(--ha-card-border-radius, 12px);
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: var(--ha-card-box-shadow, 0 8px 16px rgba(0,0,0,0.2));
+        position: relative;
+        /* Animazione di apertura stile Home Assistant (slide up + fade) */
+        animation: slideUp 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
+      @keyframes slideUp {
+        from {
+          transform: translateY(100px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      .stats-header { 
+        display: flex; 
+        align-items: center; 
+        justify-content: space-between; 
+        font-size: 1.2rem; 
+        font-weight: 400; 
+        margin-bottom: 15px; 
+        border-bottom: 1px solid var(--divider-color); 
+        padding-bottom: 10px; 
+      }
+      
+      .close-btn { cursor: pointer; color: var(--secondary-text-color); }
       .stats-section { margin-bottom: 25px; }
       .section-icon { color: var(--primary-color); margin-right: 5px; }
       .stats-title { font-size: 0.85rem; font-weight: bold; display: flex; align-items: center; color: var(--primary-text-color); margin-bottom: 12px; text-transform: uppercase; }
