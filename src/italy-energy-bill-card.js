@@ -287,9 +287,17 @@ class ItalyEnergyBillCard extends LitElement {
       return MP + perdite_rete + extra + totaleFissi;
     };
 
+    const dataPrecedente = new Date(oggi.getFullYear(), oggi.getMonth(), 0);
+    const giorniMesePrecedente = dataPrecedente.getDate(); 
+    const bonusMesePrecedente = bonusAbilitato ? (bonusGiorno * giorniMesePrecedente) : 0;
+
     let costoMesePrecedente = '--';
     if (consumoMesePrecedente !== null && !isNaN(consumoMesePrecedente)) {
-      costoMesePrecedente = (calcolaImponibileTotale(consumoMesePrecedente) * (1 + parseFloat(this.config.iva) / 100) + canoneTV).toFixed(2) + ' €';
+      const imponibileScorso = calcolaImponibileTotale(consumoMesePrecedente);
+      let totaleScorsoLordo = (imponibileScorso * (1 + parseFloat(this.config.iva) / 100) + canoneTV);
+      let totaleScorsoNetto = totaleScorsoLordo - bonusMesePrecedente;
+      
+      costoMesePrecedente = Math.max(0, totaleScorsoNetto).toFixed(2) + ' €';
     }
 
     const costoMP = consumo * prezzoMP;
