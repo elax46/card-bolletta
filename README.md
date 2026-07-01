@@ -78,7 +78,7 @@ Nel caso in cui hai un contratto a prezzo variabile, basata sul PUN, ti consigli
 
 ## 📦 Installazione
 
-### Metodo 1: Tramite HACS [(In Attesa di approvazione)](https://github.com/hacs/default/pull/6892)
+### Metodo 1: Tramite HACS
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=elax46&repository=card-bolletta)
 
