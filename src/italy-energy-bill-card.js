@@ -40,6 +40,7 @@ class ItalyEnergyBillCardEditor extends LitElement {
     if (!this.hass || !this._config) return html``;
     const tipo = this._config.tipo_costo || 'mono';
     const modoConsumo = this._config.modo_consumo || 'ent';
+    const periodoFatturazione = this._config.periodo_fatturazione || 'mensile';
 
     return html`
       <div class="card-config">
@@ -50,8 +51,14 @@ class ItalyEnergyBillCardEditor extends LitElement {
 
         <div class="label">Titolo Card</div>
         <input type="text" .value="${this._config.title || ''}" .configValue="${"title"}" @input="${this._valueChanged}" class="styled-input">
-        
-        <div class="section">1. Consumo Principale (Mensile)</div>
+
+        <div class="label">Periodo di Fatturazione</div>
+        <select .value="${periodoFatturazione}" .configValue="${"periodo_fatturazione"}" @change="${this._valueChanged}" class="styled-select" style="margin-bottom: 10px;">
+          <option value="mensile">Mensile</option>
+          <option value="bimestrale">Bimestrale</option>
+        </select>
+
+        <div class="section">1. Consumo Principale (${periodoFatturazione === 'bimestrale' ? 'Bimestrale' : 'Mensile'})</div>
         <div class="label">Sorgente Consumo</div>
         <select .value="${modoConsumo}" .configValue="${"modo_consumo"}" @change="${this._valueChanged}" class="styled-select small" style="margin-bottom: 10px;">
           <option value="ent">Sensore (Reale)</option>
@@ -59,7 +66,8 @@ class ItalyEnergyBillCardEditor extends LitElement {
         </select>
 
         ${modoConsumo === 'ent' ? html`
-          <ha-entity-picker label="Sensore Consumo Mensile (kWh)" .hass="${this.hass}" .value="${this._config.consumo_entity}" .configValue=${"consumo_entity"} @value-changed="${this._valueChanged}"></ha-entity-picker>
+          <ha-entity-picker label="Sensore Consumo ${periodoFatturazione === 'bimestrale' ? 'Bimestrale' : 'Mensile'} (kWh)" .hass="${this.hass}" .value="${this._config.consumo_entity}" .configValue=${"consumo_entity"} @value-changed="${this._valueChanged}"></ha-entity-picker>
+          ${periodoFatturazione === 'bimestrale' ? html`<div class="hint" style="font-size:0.75rem; color: var(--secondary-text-color); margin: -6px 0 10px;">Suggerimento: usa un sensore Utility Meter con ciclo di azzeramento Bimestrale per allineare i dati storici.</div>` : ''}
         ` : html`
           <div class="label">Consumo Fittizio (kWh)</div>
           <input type="number" step="0.1" .value="${this._config.consumo_val !== undefined ? this._config.consumo_val : 0}" .configValue="${"consumo_val"}" @input="${this._valueChanged}" class="styled-input">
@@ -89,6 +97,7 @@ class ItalyEnergyBillCardEditor extends LitElement {
         </div>
 
         <div class="section">4. Costi Fissi Mensili (€/mese)</div>
+        ${periodoFatturazione === 'bimestrale' ? html`<div class="hint" style="font-size:0.75rem; color: var(--secondary-text-color); margin: -5px 0 10px;">Inserisci i valori come costo <b>al mese</b>: la card li raddoppia automaticamente per il bimestre.</div>` : ''}
         <div class="row">
           <div style="flex:1;"><div class="label">Commercializzazione (PCV)</div><input type="number" step="0.01" .value="${this._config.pcv !== undefined ? this._config.pcv : 0}" .configValue="${"pcv"}" @input="${this._valueChanged}" class="styled-input"></div>
           <div style="flex:1;"><div class="label">Quota Fissa Rete/Oneri</div><input type="number" step="0.01" .value="${this._config.fissi_rete !== undefined ? this._config.fissi_rete : 0}" .configValue="${"fissi_rete"}" @input="${this._valueChanged}" class="styled-input"></div>
@@ -201,7 +210,7 @@ class ItalyEnergyBillCard extends LitElement {
   }
 
   setConfig(config) {
-    this.config = { title: "Costo Energia", tipo_costo: "mono", iva: 10, perdite_rete: 10, canone_tv: 0, contatore_kw: 3, prezzo_kw: 1.98, layout_compatto: false, bonus_enabled: false, bonus_valore_giorno: 0, ...config };
+    this.config = { title: "Costo Energia", tipo_costo: "mono", periodo_fatturazione: "mensile", iva: 10, perdite_rete: 10, canone_tv: 0, contatore_kw: 3, prezzo_kw: 1.98, layout_compatto: false, bonus_enabled: false, bonus_valore_giorno: 0, ...config };
   }
 
   _toggleStats() {
@@ -241,11 +250,17 @@ class ItalyEnergyBillCard extends LitElement {
       }
     }
 
+    const isBimestrale = this.config.periodo_fatturazione === 'bimestrale';
+    const moltiplicatorePeriodo = isBimestrale ? 2 : 1;
+
     const bonusAbilitato = this.config.bonus_enabled || false;
     const bonusGiorno = parseFloat(this.config.bonus_valore_giorno) || 0;
     const oggi = new Date();
     const giornoCorrente = oggi.getDate();
-    const scontoBonusMaturato = bonusAbilitato ? (bonusGiorno * giornoCorrente) : 0;
+    // Per il bimestre corrente si contano anche tutti i giorni del mese precedente completo
+    const giorniMeseScorsoCompleto = isBimestrale ? new Date(oggi.getFullYear(), oggi.getMonth(), 0).getDate() : 0;
+    const giorniMaturatiPeriodo = giornoCorrente + giorniMeseScorsoCompleto;
+    const scontoBonusMaturato = bonusAbilitato ? (bonusGiorno * giorniMaturatiPeriodo) : 0;
 
     const hasHistoricalSensors = 
       this.config.consumo_giornaliero_entity || 
@@ -275,10 +290,16 @@ class ItalyEnergyBillCard extends LitElement {
     const kw = parseFloat(this.config.contatore_kw) || 3;
     const prezzoKw = parseFloat(this.config.prezzo_kw) || 1.98;
     const quotaPotenza = kw * prezzoKw;
-    const totaleFissi = pcv + quotaPotenza + fissiRete;
-    
+    // I costi fissi sono inseriti "al mese": si moltiplicano x2 se la fatturazione è bimestrale
+    const totaleFissi = (pcv + quotaPotenza + fissiRete) * moltiplicatorePeriodo;
+
     const currentMonth = new Date().getMonth();
-    let canoneTV = (currentMonth >= 0 && currentMonth <= 9) ? (parseFloat(this.config.canone_tv) || 0) : 0;
+    const canoneMensile = (mese) => (mese >= 0 && mese <= 9) ? (parseFloat(this.config.canone_tv) || 0) : 0;
+    // In bimestrale il canone TV va valutato mese per mese (potrebbe essere dovuto solo per uno dei due mesi, es. Ott-Nov)
+    const meseScorso = (currentMonth + 11) % 12;
+    let canoneTV = isBimestrale
+      ? (canoneMensile(currentMonth) + canoneMensile(meseScorso))
+      : canoneMensile(currentMonth);
 
     const calcolaImponibileTotale = (kwh) => {
       const MP = kwh * prezzoMP;
@@ -288,7 +309,13 @@ class ItalyEnergyBillCard extends LitElement {
     };
 
     const dataPrecedente = new Date(oggi.getFullYear(), oggi.getMonth(), 0);
-    const giorniMesePrecedente = dataPrecedente.getDate(); 
+    let giorniMesePrecedente = dataPrecedente.getDate();
+    if (isBimestrale) {
+      // Bimestre precedente = i due mesi immediatamente prima del mese corrente
+      const dataInizioBimestrePrec = new Date(oggi.getFullYear(), oggi.getMonth() - 2, 1);
+      const dataFineBimestrePrec = new Date(oggi.getFullYear(), oggi.getMonth(), 0);
+      giorniMesePrecedente = Math.round((dataFineBimestrePrec - dataInizioBimestrePrec) / (1000 * 60 * 60 * 24)) + 1;
+    }
     const bonusMesePrecedente = bonusAbilitato ? (bonusGiorno * giorniMesePrecedente) : 0;
 
     let costoMesePrecedente = '--';
@@ -349,7 +376,7 @@ class ItalyEnergyBillCard extends LitElement {
               <span class="currency">€</span>
               <span class="value">${totaleCorrente.toFixed(2)}</span>
             </div>
-            <div class="month-label">Stima costi correnti (IVA ${this.config.iva}% ${canoneTV > 0 ? '+ Canone' : ''})</div>
+            <div class="month-label">Stima costi ${isBimestrale ? 'bimestre corrente' : 'correnti'} (IVA ${this.config.iva}% ${canoneTV > 0 ? '+ Canone' : ''})</div>
             
             <div class="divider"></div>
 
@@ -391,15 +418,15 @@ class ItalyEnergyBillCard extends LitElement {
                 </div>
                 
                 <div class="stats-section">
-                <div class="stats-title"><ha-icon icon="mdi:history" class="section-icon"></ha-icon> Confronto Mesi</div>
+                <div class="stats-title"><ha-icon icon="mdi:history" class="section-icon"></ha-icon> Confronto ${isBimestrale ? 'Bimestri' : 'Mesi'}</div>
                 <div class="stats-grid grid-2">
                     <div class="stats-col">
-                        <span>Mese Scorso (Lordo)</span>
+                        <span>${isBimestrale ? 'Bimestre' : 'Mese'} Scorso (Lordo)</span>
                         <b style="font-size: 1.1rem; color: var(--secondary-text-color);">${costoMesePrecedente}</b>
                         <span style="margin-top: 2px;">(${consumoMesePrecedente !== null ? consumoMesePrecedente + ' kWh' : '--'})</span>
                     </div>
                     <div class="stats-col highlight">
-                        <span>Mese Corrente</span>
+                        <span>${isBimestrale ? 'Bimestre' : 'Mese'} Corrente</span>
                         <b style="font-size: 1.1rem;">${totaleCorrente.toFixed(2)} €</b>
                         <span style="margin-top: 2px; color: rgba(255,255,255,0.8);">(${consumo.toFixed(1)} kWh)</span>
                     </div>

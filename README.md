@@ -28,6 +28,7 @@ Una custom card per **Home Assistant** progettata specificamente per il mercato 
 * **Supporto Multi-Fascia:** Gestione automatica delle fasce orarie **F1, F2 e F3**.
 * **Statistiche Avanzate:** Confronta i dati storici e analizza la ripartizione dei costi tra quota fissa e variabile.
 * **Design Flessibile:** Nuovo layout **Ultra-Compact** per dashboard minimaliste e una vista dettagliata per i "power user".
+* **Fatturazione Mensile o Bimestrale:** Scegli il periodo di fatturazione del tuo contratto: la card adatta automaticamente costi fissi, canone TV e bonus sociale.
 
 ---
 
@@ -58,6 +59,7 @@ Una custom card per **Home Assistant** progettata specificamente per il mercato 
 * **Calcolo Completo:** Tiene conto di Spread, Costi di Trasporto, Oneri di Sistema, Accise, PCV, Quota Potenza, IVA e Perdite di Rete.
 * **Finestra Statistiche:** Un pop-up integrato che mostra il breakdown completo della bolletta (Imposte, Energia, Trasporto, ecc.) e il confronto con il mese precedente.
 * **Auto-rilevamento Mese Precedente:** Legge in automatico l'attributo `last_period` dei tuoi Utility Meter per dirti quanto hai speso il mese scorso.
+* **Periodo di Fatturazione Configurabile:** Supporta sia contratti con bolletta **Mensile** che **Bimestrale**, raddoppiando in automatico i costi fissi (PCV, quota potenza, quota fissa rete) e adattando canone TV e bonus sociale quando selezioni il bimestrale.
 
 ---
 
@@ -70,7 +72,7 @@ Una custom card per **Home Assistant** progettata specificamente per il mercato 
 Per sfruttare la card al massimo delle sue potenzialità (specialmente i dati storici e il confronto con il mese scorso), si consiglia di non usare i consumi totali diretti del dispositivo, ma di creare dei sensori mensili, giornalieri, trimestrali ed annuali tramite l'integrazione ufficiale **Utility Meter** (Contatori) di Home Assistant:
 
 * Vai su *Impostazioni -> Dispositivi e Servizi -> Aiutanti -> Crea Aiutante -> Contatore (Utility Meter)*.
-* Crea un sensore con ciclo di azzeramento **Mensile** (questo sarà il tuo sensore principale).
+* Crea un sensore con ciclo di azzeramento **Mensile** (questo sarà il tuo sensore principale). Se la tua bolletta è **Bimestrale**, crea invece il sensore con ciclo **Bimestrale** e imposta di conseguenza l'opzione "Periodo di Fatturazione" della card.
 
 Nel caso in cui hai un contratto a prezzo variabile, basata sul PUN, ti consiglio di installare l'integrazione [Prezzi PUN del mese](https://github.com/virtualdj/pun_sensor)
 
@@ -107,7 +109,8 @@ Il modo più semplice per usare la card è tramite l'interfaccia grafica (Editor
 2. Clicca su **Aggiungi scheda**.
 3. Scorri fino in fondo (o cerca) e seleziona **Custom: Card Bolletta**.
 4. Si aprirà l'interfaccia di configurazione:
-   * **Sezione 1:** Scegli "Sensore (Reale)" e seleziona il tuo sensore Utility Meter mensile.
+   * **Periodo di Fatturazione:** Scegli "Mensile" o "Bimestrale" a seconda del tuo contratto. I valori dei costi fissi vanno sempre inseriti "al mese": se scegli Bimestrale la card li raddoppia da sola.
+   * **Sezione 1:** Scegli "Sensore (Reale)" e seleziona il tuo sensore Utility Meter (mensile o bimestrale, coerente con il periodo scelto sopra).
    * **Sezione 2, 3, 4, 5:** Compila i campi inserendo i dati del tuo contratto luce (PCV, Spread, Oneri, ecc.). Se hai un costo fisso dell'energia, seleziona "Prezzo Fisso". Se hai il PUN, seleziona "Sensore" e cerca la tua entità del PUN.
    * **Sezione 6 (Opzionale):** Inserisci qui i tuoi Utility Meter Giornalieri, Settimanali, ecc., se vuoi vederli nel pannello delle statistiche.
 5. Clicca su **Salva**.
@@ -123,6 +126,7 @@ Se preferisci l'editor di codice o vuoi copiare/incollare configurazioni preimpo
 ```yaml
 type: custom:italy-energy-bill-card
 consumo_entity: sensor.monthly_consumption
+periodo_fatturazione: mensile
 p1_val: 0.09
 quota_fissa_mese: 13.96
 title: Costo energia
@@ -153,18 +157,19 @@ bonus_valore_giorno: 0.51
 | Variabile | Descrizione | Default / Opzioni |
 |---|---|---|
 | `title` | Titolo della card | "Costo Energia" |
+| `periodo_fatturazione` | Periodo di fatturazione del contratto | `mensile` o `bimestrale` |
 | `modo_consumo` | Origine del consumo principale | `ent` (Sensore) o `val` (Testuale) |
-| `consumo_entity` | Entity ID del consumo mensile | es. `sensor.consumo_mese` |
+| `consumo_entity` | Entity ID del consumo (mensile o bimestrale, coerente con `periodo_fatturazione`) | es. `sensor.consumo_mese` |
 | `tipo_costo` | Tipo di tariffazione | `mono` (Monoraria) o `fasce` (F1/F2/F3) |
 | `modo_p1`, `p2`, `p3` | Origine del prezzo (F1, F2, F3 o Mono) | `val` (Fisso) o `ent` (Sensore es. PUN) |
 | `p1_ent`, `p1_val` | Entity ID o Valore fisso del prezzo | es. `sensor.pun` o `0.15` |
 | `spread` | Spread aggiuntivo del fornitore (€/kWh) | 0 |
 | `trasporto`, `oneri`, `accise` | Costi variabili per singolo kWh (€/kWh) | 0 |
-| `pcv` | Quota fissa Commercializzazione (€/mese) | 0 |
-| `fissi_rete` | Quota fissa Rete/Oneri (€/mese) | 0 |
+| `pcv` | Quota fissa Commercializzazione (€/**mese**, va inserita sempre come costo mensile: se `periodo_fatturazione` è `bimestrale` viene raddoppiata in automatico) | 0 |
+| `fissi_rete` | Quota fissa Rete/Oneri (€/**mese**, raddoppiata in automatico se bimestrale) | 0 |
 | `contatore_kw` | Potenza impegnata contatore | 3 (es. 1.5, 3, 4.5, 6) |
-| `prezzo_kw` | Costo mensile per kW di potenza impegnata | 1.98 |
-| `canone_tv` | Costo mensile canone RAI | 0 (Imposta 9 può variare nel corso degli anni) |
+| `prezzo_kw` | Costo mensile per kW di potenza impegnata (raddoppiato in automatico se bimestrale) | 1.98 |
+| `canone_tv` | Costo mensile canone RAI (valutato mese per mese sui mesi coperti dal periodo, utile per i bimestri a cavallo di Ottobre) | 0 (Imposta 9 può variare nel corso degli anni) |
 | `iva` | Aliquota IVA applicata (%) | 10 (o 22) |
 | `perdite_rete` | Perdite di rete applicate alla mat. prima (%) | 10 |
 | `consumo_giornaliero_entity` | (Opzionale) Storico per le statistiche | es. `sensor.consumo_oggi` |
@@ -187,6 +192,8 @@ Se la card mostra un valore che sembra non corrispondere alla semplice sottrazio
 > - **Sconto maturato:** $0,51€ \times 12 \text{ giorni} = \mathbf{6,12€}$
 
 Questa logica garantisce che il risparmio cresca proporzionalmente insieme ai tuoi consumi durante tutto l'arco del mese.
+
+> **Nota per la fatturazione Bimestrale:** se imposti `periodo_fatturazione: bimestrale`, la maturazione del bonus (e il confronto con il periodo precedente) viene calcolata sui giorni dell'intero bimestre (mese corrente + mese precedente), non sul singolo mese.
 
 ## 💻 Sviluppo
 
