@@ -60,6 +60,7 @@ Una custom card per **Home Assistant** progettata specificamente per il mercato 
 * **Finestra Statistiche:** Un pop-up integrato che mostra il breakdown completo della bolletta (Imposte, Energia, Trasporto, ecc.) e il confronto con il mese precedente.
 * **Auto-rilevamento Mese Precedente:** Legge in automatico l'attributo `last_period` dei tuoi Utility Meter per dirti quanto hai speso il mese scorso.
 * **Periodo di Fatturazione Configurabile:** Supporta sia contratti con bolletta **Mensile** che **Bimestrale**, raddoppiando in automatico i costi fissi (PCV, quota potenza, quota fissa rete) e adattando canone TV e bonus sociale quando selezioni il bimestrale.
+* **PCV da Sensore:** Oltre al valore fisso, il costo di Commercializzazione (PCV) può essere letto da un sensore (es. un valore annuale) e "spalmato" automaticamente sul numero di mesi indicato, adattandosi poi al periodo di fatturazione scelto.
 
 ---
 
@@ -111,7 +112,7 @@ Il modo più semplice per usare la card è tramite l'interfaccia grafica (Editor
 4. Si aprirà l'interfaccia di configurazione:
    * **Periodo di Fatturazione:** Scegli "Mensile" o "Bimestrale" a seconda del tuo contratto. I valori dei costi fissi vanno sempre inseriti "al mese": se scegli Bimestrale la card li raddoppia da sola.
    * **Sezione 1:** Scegli "Sensore (Reale)" e seleziona il tuo sensore Utility Meter (mensile o bimestrale, coerente con il periodo scelto sopra).
-   * **Sezione 2, 3, 4, 5:** Compila i campi inserendo i dati del tuo contratto luce (PCV, Spread, Oneri, ecc.). Se hai un costo fisso dell'energia, seleziona "Prezzo Fisso". Se hai il PUN, seleziona "Sensore" e cerca la tua entità del PUN.
+   * **Sezione 2, 3, 4, 5:** Compila i campi inserendo i dati del tuo contratto luce (PCV, Spread, Oneri, ecc.). Se hai un costo fisso dell'energia, seleziona "Prezzo Fisso". Se hai il PUN, seleziona "Sensore" e cerca la tua entità del PUN. Anche il costo di **Commercializzazione (PCV)** può essere impostato come valore fisso o letto da un sensore (utile se il tuo fornitore espone un sensore con il costo annuale).
    * **Sezione 6 (Opzionale):** Inserisci qui i tuoi Utility Meter Giornalieri, Settimanali, ecc., se vuoi vederli nel pannello delle statistiche.
 5. Clicca su **Salva**.
 
@@ -141,6 +142,8 @@ trasporto: 0.018
 oneri: 0.0229
 accise: 0.0206
 pcv: 6.1
+modo_pcv: val
+pcv_spalma_mesi: 12
 fissi_rete: 1.91
 contatore_kw: "3"
 grid_options:
@@ -165,7 +168,10 @@ bonus_valore_giorno: 0.51
 | `p1_ent`, `p1_val` | Entity ID o Valore fisso del prezzo | es. `sensor.pun` o `0.15` |
 | `spread` | Spread aggiuntivo del fornitore (€/kWh) | 0 |
 | `trasporto`, `oneri`, `accise` | Costi variabili per singolo kWh (€/kWh) | 0 |
-| `pcv` | Quota fissa Commercializzazione (€/**mese**, va inserita sempre come costo mensile: se `periodo_fatturazione` è `bimestrale` viene raddoppiata in automatico) | 0 |
+| `pcv` | Quota fissa Commercializzazione (€/**mese**, usata solo se `modo_pcv` è `val`; va inserita sempre come costo mensile: se `periodo_fatturazione` è `bimestrale` viene raddoppiata in automatico) | 0 |
+| `modo_pcv` | Origine del costo di Commercializzazione (PCV) | `val` (Valore Fisso) o `ent` (Sensore) |
+| `pcv_entity` | Entity ID del sensore PCV (usato se `modo_pcv: ent`), tipicamente un valore **annuale** | es. `sensor.pcv_annuale` |
+| `pcv_spalma_mesi` | Numero di mesi su cui dividere il valore letto da `pcv_entity` per ottenere il costo mensile (poi adattato al periodo di fatturazione) | 12 |
 | `fissi_rete` | Quota fissa Rete/Oneri (€/**mese**, raddoppiata in automatico se bimestrale) | 0 |
 | `contatore_kw` | Potenza impegnata contatore | 3 (es. 1.5, 3, 4.5, 6) |
 | `prezzo_kw` | Costo mensile per kW di potenza impegnata (raddoppiato in automatico se bimestrale) | 1.98 |
@@ -194,6 +200,8 @@ Se la card mostra un valore che sembra non corrispondere alla semplice sottrazio
 Questa logica garantisce che il risparmio cresca proporzionalmente insieme ai tuoi consumi durante tutto l'arco del mese.
 
 > **Nota per la fatturazione Bimestrale:** se imposti `periodo_fatturazione: bimestrale`, la maturazione del bonus (e il confronto con il periodo precedente) viene calcolata sui giorni dell'intero bimestre (mese corrente + mese precedente), non sul singolo mese.
+
+> **Nota sul PCV da Sensore:** se `modo_pcv: ent`, il valore letto da `pcv_entity` viene prima diviso per `pcv_spalma_mesi` (per ottenere il costo mensile equivalente) e poi moltiplicato per 2 se `periodo_fatturazione` è `bimestrale`, esattamente come avviene per il PCV inserito manualmente.
 
 ## 💻 Sviluppo
 

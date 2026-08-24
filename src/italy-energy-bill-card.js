@@ -41,6 +41,7 @@ class ItalyEnergyBillCardEditor extends LitElement {
     const tipo = this._config.tipo_costo || 'mono';
     const modoConsumo = this._config.modo_consumo || 'ent';
     const periodoFatturazione = this._config.periodo_fatturazione || 'mensile';
+    const modoPcv = this._config.modo_pcv || 'val';
 
     return html`
       <div class="card-config">
@@ -98,8 +99,21 @@ class ItalyEnergyBillCardEditor extends LitElement {
 
         <div class="section">4. Costi Fissi Mensili (€/mese)</div>
         ${periodoFatturazione === 'bimestrale' ? html`<div class="hint" style="font-size:0.75rem; color: var(--secondary-text-color); margin: -5px 0 10px;">Inserisci i valori come costo <b>al mese</b>: la card li raddoppia automaticamente per il bimestre.</div>` : ''}
+
+        <div class="price-box">
+          <div class="label" style="margin-bottom: 5px;">Commercializzazione (PCV)</div>
+          <select .value="${modoPcv}" .configValue="${"modo_pcv"}" @change="${this._valueChanged}" class="styled-select small">
+            <option value="val">Valore Fisso (€/mese)</option><option value="ent">Sensore (es. PCV Annuale)</option>
+          </select>
+          ${modoPcv === 'ent' ? html`
+            <ha-entity-picker style="margin-top: 5px;" label="Sensore PCV" .hass="${this.hass}" .value="${this._config.pcv_entity}" .configValue=${"pcv_entity"} @value-changed="${this._valueChanged}"></ha-entity-picker>
+            <div class="label" style="margin-top: 5px;">Spalma il costo del sensore su quanti mesi?</div>
+            <input type="number" step="1" min="1" .value="${this._config.pcv_spalma_mesi !== undefined ? this._config.pcv_spalma_mesi : 12}" .configValue="${"pcv_spalma_mesi"}" @input="${this._valueChanged}" class="styled-input small">
+            <div class="hint" style="font-size:0.75rem; color: var(--secondary-text-color); margin-top: 5px;">Il valore letto dal sensore viene diviso per i mesi indicati (di norma 12, dato che il PCV è tipicamente un costo annuale) per ottenere il costo mensile, poi adattato al periodo di fatturazione scelto sopra.</div>
+          ` : html`<input type="number" step="0.01" .value="${this._config.pcv !== undefined ? this._config.pcv : 0}" .configValue="${"pcv"}" @input="${this._valueChanged}" class="styled-input small" style="margin-top: 5px;">`}
+        </div>
+
         <div class="row">
-          <div style="flex:1;"><div class="label">Commercializzazione (PCV)</div><input type="number" step="0.01" .value="${this._config.pcv !== undefined ? this._config.pcv : 0}" .configValue="${"pcv"}" @input="${this._valueChanged}" class="styled-input"></div>
           <div style="flex:1;"><div class="label">Quota Fissa Rete/Oneri</div><input type="number" step="0.01" .value="${this._config.fissi_rete !== undefined ? this._config.fissi_rete : 0}" .configValue="${"fissi_rete"}" @input="${this._valueChanged}" class="styled-input"></div>
         </div>
         <div class="row" style="margin-top: 10px;">
@@ -210,7 +224,7 @@ class ItalyEnergyBillCard extends LitElement {
   }
 
   setConfig(config) {
-    this.config = { title: "Costo Energia", tipo_costo: "mono", periodo_fatturazione: "mensile", iva: 10, perdite_rete: 10, canone_tv: 0, contatore_kw: 3, prezzo_kw: 1.98, layout_compatto: false, bonus_enabled: false, bonus_valore_giorno: 0, ...config };
+    this.config = { title: "Costo Energia", tipo_costo: "mono", periodo_fatturazione: "mensile", modo_pcv: "val", pcv_spalma_mesi: 12, iva: 10, perdite_rete: 10, canone_tv: 0, contatore_kw: 3, prezzo_kw: 1.98, layout_compatto: false, bonus_enabled: false, bonus_valore_giorno: 0, ...config };
   }
 
   _toggleStats() {
@@ -224,6 +238,17 @@ class ItalyEnergyBillCard extends LitElement {
       return (ent && this.hass.states[ent]) ? parseFloat(this.hass.states[ent].state) || 0 : 0;
     }
     return parseFloat(this.config['p' + index + '_val']) || 0;
+  }
+
+  _getPcvMensile() {
+    const modo = this.config.modo_pcv || 'val';
+    if (modo === 'ent') {
+      const ent = this.config.pcv_entity;
+      const pcvSensore = (ent && this.hass.states[ent]) ? parseFloat(this.hass.states[ent].state) || 0 : 0;
+      const spalmaMesi = parseFloat(this.config.pcv_spalma_mesi) || 12;
+      return spalmaMesi > 0 ? (pcvSensore / spalmaMesi) : 0;
+    }
+    return parseFloat(this.config.pcv) || 0;
   }
 
   _getHistoricalValue(entityId) {
@@ -285,13 +310,16 @@ class ItalyEnergyBillCard extends LitElement {
     const accise = parseFloat(this.config.accise) || 0;
     const totaleVariabiliExtra = spread + trasporto + oneri + accise;
 
-    const pcv = parseFloat(this.config.pcv) || 0;
-    const fissiRete = parseFloat(this.config.fissi_rete) || 0;
+    const pcvMensile = this._getPcvMensile();
     const kw = parseFloat(this.config.contatore_kw) || 3;
     const prezzoKw = parseFloat(this.config.prezzo_kw) || 1.98;
-    const quotaPotenza = kw * prezzoKw;
-    // I costi fissi sono inseriti "al mese": si moltiplicano x2 se la fatturazione è bimestrale
-    const totaleFissi = (pcv + quotaPotenza + fissiRete) * moltiplicatorePeriodo;
+    const quotaPotenzaMensile = kw * prezzoKw;
+    const fissiReteMensile = parseFloat(this.config.fissi_rete) || 0;
+    // I costi fissi sono inseriti/calcolati "al mese": si moltiplicano x2 se la fatturazione è bimestrale
+    const pcv = pcvMensile * moltiplicatorePeriodo;
+    const quotaPotenza = quotaPotenzaMensile * moltiplicatorePeriodo;
+    const fissiRete = fissiReteMensile * moltiplicatorePeriodo;
+    const totaleFissi = pcv + quotaPotenza + fissiRete;
 
     const currentMonth = new Date().getMonth();
     const canoneMensile = (mese) => (mese >= 0 && mese <= 9) ? (parseFloat(this.config.canone_tv) || 0) : 0;
