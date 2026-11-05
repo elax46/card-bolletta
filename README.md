@@ -60,6 +60,7 @@ Una custom card per **Home Assistant** progettata specificamente per il mercato 
 * **Finestra Statistiche:** Un pop-up integrato che mostra il breakdown completo della bolletta (Imposte, Energia, Trasporto, ecc.) e il confronto con il mese precedente.
 * **Auto-rilevamento Mese Precedente:** Legge in automatico l'attributo `last_period` dei tuoi Utility Meter per dirti quanto hai speso il mese scorso.
 * **Periodo di Fatturazione Configurabile:** Supporta sia contratti con bolletta **Mensile** che **Bimestrale**, raddoppiando in automatico i costi fissi (PCV, quota potenza, quota fissa rete) e adattando canone TV e bonus sociale quando selezioni il bimestrale.
+* **Parametri ARERA automatici:** Trasporto, Oneri di Sistema, Quota fissa rete e Costo potenza possono essere aggiornati in automatico ogni mese/trimestre, oppure letti da sensori tuoi (es. l'integrazione [Bolletta](https://github.com/Sanji78/bolletta)). Vedi la sezione [Aggiornamento automatico dei parametri ARERA](#-aggiornamento-automatico-dei-parametri-arera).
 * **PCV da Sensore:** Oltre al valore fisso, il costo di Commercializzazione (PCV) può essere letto da un sensore (es. un valore annuale) e "spalmato" automaticamente sul numero di mesi indicato, adattandosi poi al periodo di fatturazione scelto.
 
 ---
@@ -179,8 +180,60 @@ bonus_valore_giorno: 0.51
 | `iva` | Aliquota IVA applicata (%) | 10 (o 22) |
 | `perdite_rete` | Perdite di rete applicate alla mat. prima (%) | 10 |
 | `consumo_giornaliero_entity` | (Opzionale) Storico per le statistiche | es. `sensor.consumo_oggi` |
+| `modo_trasporto`, `modo_oneri`, `modo_fissi_rete`, `modo_prezzo_kw` | Origine del valore: `val` (fisso), `ent` (sensore) o `auto` (dati ARERA automatici) | `val` |
+| `modo_spread`, `modo_accise` | Origine del valore: `val` (fisso) o `ent` (sensore) | `val` |
+| `trasporto_entity`, `oneri_entity`, `fissi_rete_entity`, `prezzo_kw_entity`, `spread_entity`, `accise_entity` | Entity ID del sensore (usato se la relativa `modo_*` è `ent`) | es. `sensor.arera_energy_sc1` |
+| `oneri_entity2` | (Opzionale) Secondo sensore per gli oneri: viene **sommato** a `oneri_entity` (utile per ASOS + ARIM) | es. `sensor.arera_arim_sc1` |
+| `tipo_utenza` | Tipo di utenza per i valori `auto` | `residente` o `non_residente` |
+| `arera_url` | (Avanzato) URL alternativo del JSON dei parametri ARERA usato in modalità `auto` | URL di `data/arera.json` di questo repository |
 | `bonus_enabled` | (Opzionale) Bonus Sociale | es. `bonus_enabled: true/false` |
 | `bonus_valore_giorno` | (Opzionale) Bonus giornaliero applicato per POD | es. `0.40` per il valore specifico fare riferimento alla tabella sul sito [Arera](https://www.arera.it/consumatori/bonus-sociale/bonus-sociale-per-disagio-economico/a-quanto-ammontano) |
+
+---
+
+## 🔄 Aggiornamento automatico dei parametri ARERA
+
+Trasporto, Oneri di Sistema, Quota fissa rete e Costo potenza sono fissati da ARERA e cambiano periodicamente: per ciascuno puoi scegliere nell'editor la **sorgente del valore**.
+
+| Modalità | Descrizione |
+|---|---|
+| **Valore Fisso** (`val`) | Il numero che inserisci a mano (comportamento storico). |
+| **Sensore** (`ent`) | Un sensore di Home Assistant, ad esempio quelli dell'integrazione [Bolletta](https://github.com/Sanji78/bolletta). |
+| **Automatico (ARERA)** (`auto`) | La card legge i valori da `data/arera.json`, un file di questo repository aggiornato ogni mese da una GitHub Action. Non serve nessun sensore. |
+
+In ogni modalità, se la sorgente non è disponibile (sensore `unavailable`, dati ARERA non raggiungibili) la card usa il **valore di riserva** inserito a mano.
+
+### Uso con i sensori dell'integrazione Bolletta
+
+| Campo della card | Sensore Bolletta | Unità |
+|---|---|---|
+| Costo Trasporto (`trasporto`) | `sensor.arera_energy_sc1` | €/kWh |
+| Oneri di Sistema (`oneri`) | `sensor.arera_asos_sc1` + `sensor.arera_arim_sc1` (da inserire in `oneri_entity` e `oneri_entity2`) | €/kWh |
+| Quota Fissa Rete (`fissi_rete`) | `sensor.arera_fix_quota_transport` | €/mese |
+| Costo Potenza (`prezzo_kw`) | `sensor.arera_quota_power` | €/kW/mese |
+
+```yaml
+modo_trasporto: ent
+trasporto_entity: sensor.arera_energy_sc1
+modo_oneri: ent
+oneri_entity: sensor.arera_asos_sc1
+oneri_entity2: sensor.arera_arim_sc1
+modo_fissi_rete: ent
+fissi_rete_entity: sensor.arera_fix_quota_transport
+modo_prezzo_kw: ent
+prezzo_kw_entity: sensor.arera_quota_power
+```
+
+> [!NOTE]
+> Le accise e le perdite di rete esposte dall'integrazione (`sensor.portaleofferte_accisa_tax`, `sensor.portaleofferte_nw_loss_percentage`) potrebbero avere unità diverse da quelle della card (€/kWh e %): controlla il valore prima di usarle. Lo **Spread** è un valore del tuo contratto, non è fissato da ARERA: resta da inserire a mano o da un tuo sensore.
+
+### Modalità automatica
+
+Seleziona **Automatico (ARERA)** e, in sezione 3, il tipo di utenza (residente o no). La card scarica `data/arera.json` (con cache nel browser di 12 ore), usa il periodo del mese corrente oppure l'ultimo disponibile, e ricade sul valore di riserva se i dati non ci sono.
+
+I dati provengono dal file Excel ARERA del servizio a tutela graduale per i clienti domestici non vulnerabili, letto dallo script `scripts/update_arera.py` (adattato dall'integrazione Bolletta di Sanji78, licenza MIT). La GitHub Action `update-arera.yml` lo esegue il 5 di ogni mese. Il parsing si basa sulla struttura attuale del file: se ARERA la cambia l'Action fallisce e va aggiornato lo script.
+
+Per la prima popolazione del file, o per forzare un aggiornamento: **Actions → Update ARERA data → Run workflow**.
 
 ---
 
