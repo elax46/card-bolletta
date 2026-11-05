@@ -60,7 +60,7 @@ Una custom card per **Home Assistant** progettata specificamente per il mercato 
 * **Finestra Statistiche:** Un pop-up integrato che mostra il breakdown completo della bolletta (Imposte, Energia, Trasporto, ecc.) e il confronto con il mese precedente.
 * **Auto-rilevamento Mese Precedente:** Legge in automatico l'attributo `last_period` dei tuoi Utility Meter per dirti quanto hai speso il mese scorso.
 * **Periodo di Fatturazione Configurabile:** Supporta sia contratti con bolletta **Mensile** che **Bimestrale**, raddoppiando in automatico i costi fissi (PCV, quota potenza, quota fissa rete) e adattando canone TV e bonus sociale quando selezioni il bimestrale.
-* **Parametri ARERA automatici:** Trasporto, Oneri di Sistema, Quota fissa rete e Costo potenza possono essere aggiornati in automatico ogni mese/trimestre, oppure letti da sensori tuoi (es. l'integrazione [Bolletta](https://github.com/Sanji78/bolletta)). Vedi la sezione [Aggiornamento automatico dei parametri ARERA](#-aggiornamento-automatico-dei-parametri-arera).
+* **Parametri ARERA automatici:** Trasporto, Oneri di Sistema, Quota fissa rete e Costo potenza possono essere aggiornati in automatico ogni mese/trimestre, oppure letti da sensori tuoi. Vedi la sezione [Aggiornamento automatico dei parametri ARERA](#-aggiornamento-automatico-dei-parametri-arera).
 * **PCV da Sensore:** Oltre al valore fisso, il costo di Commercializzazione (PCV) può essere letto da un sensore (es. un valore annuale) e "spalmato" automaticamente sul numero di mesi indicato, adattandosi poi al periodo di fatturazione scelto.
 
 ---
@@ -231,7 +231,7 @@ prezzo_kw_entity: sensor.arera_quota_power
 
 Seleziona **Automatico (ARERA)** e, in sezione 3, il tipo di utenza (residente o no). La card scarica `data/arera.json` (con cache nel browser di 12 ore), usa il periodo del mese corrente oppure l'ultimo disponibile, e ricade sul valore di riserva se i dati non ci sono.
 
-I dati provengono dal file Excel ARERA del servizio a tutela graduale per i clienti domestici non vulnerabili, letto dallo script `scripts/update_arera.py` (adattato dall'integrazione Bolletta di Sanji78, licenza MIT). La GitHub Action `update-arera.yml` lo esegue il 5 di ogni mese. Il parsing si basa sulla struttura attuale del file: se ARERA la cambia l'Action fallisce e va aggiornato lo script.
+I dati provengono dal file Excel ARERA del servizio a tutela graduale per i clienti domestici non vulnerabili, letto dallo script `scripts/update_arera.py`. La GitHub Action `update-arera.yml` lo esegue il 5 di ogni mese. Il parsing si basa sulla struttura attuale del file: se ARERA la cambia l'Action fallisce e va aggiornato lo script.
 
 Per la prima popolazione del file, o per forzare un aggiornamento: **Actions → Update ARERA data → Run workflow**.
 
