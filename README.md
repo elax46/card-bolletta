@@ -82,17 +82,16 @@ Nel caso in cui hai un contratto a prezzo variabile, basata sul PUN, ti consigli
 
 ## 📦 Installazione
 
-### Metodo 1: Tramite HACS
+### Metodo 1: Tramite Marketplace
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=elax46&repository=card-bolletta)
 
 
-1. Apri **HACS** in Home Assistant.
-2. Vai su **Frontend** (Interfaccia).
-3. Clicca sui tre puntini in alto a destra e seleziona **Repository personalizzati**.
-4. Incolla l'URL di questo repository `https://github.com/elax46/card-bolletta` e seleziona come categoria **Lovelace**.
-5. Clicca su **Aggiungi** e poi su **Scarica**.
-6. Ricarica la pagina del tuo browser.
+1. Apri **Marketplace** dalle impostazioni di Home Assistant.
+2. Clicca su **Aggiungi dal collegamento**.
+3. Incolla l'URL di questo repository `https://github.com/elax46/card-bolletta`.
+4. Clicca su **Aggiungi** e poi su **Scarica**.
+5. Ricarica la pagina del tuo browser.
 
 
 ### Metodo 2: Installazione Manuale
