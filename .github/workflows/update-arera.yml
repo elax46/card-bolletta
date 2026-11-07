@@ -2,7 +2,9 @@ name: Update ARERA data
 
 on:
   schedule:
-    - cron: "0 6 5 * *" 
+    - cron: "0 6 5 * *"   # il 5 di ogni mese
+  workflow_dispatch:
+
 permissions:
   contents: write
 
