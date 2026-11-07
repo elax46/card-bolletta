@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { AreraStore, AUTO_PARAMS, DEFAULT_ARERA_URL, getAutoValue } from './arera-data.js';
 
 // --- EDITOR DELLA CARD (GUI) ---
 class ItalyEnergyBillCardEditor extends LitElement {
@@ -88,14 +89,11 @@ class ItalyEnergyBillCardEditor extends LitElement {
         `}
 
         <div class="section">3. Costi Variabili Extra (€/kWh)</div>
-        <div class="row">
-          <div style="flex:1;"><div class="label">Spread Energia</div><input type="number" step="0.0001" .value="${this._config.spread !== undefined ? this._config.spread : 0}" .configValue="${"spread"}" @input="${this._valueChanged}" class="styled-input"></div>
-          <div style="flex:1;"><div class="label">Costo Trasporto</div><input type="number" step="0.0001" .value="${this._config.trasporto !== undefined ? this._config.trasporto : 0}" .configValue="${"trasporto"}" @input="${this._valueChanged}" class="styled-input"></div>
-        </div>
-        <div class="row" style="margin-top: 10px;">
-          <div style="flex:1;"><div class="label">Oneri di Sistema</div><input type="number" step="0.0001" .value="${this._config.oneri !== undefined ? this._config.oneri : 0}" .configValue="${"oneri"}" @input="${this._valueChanged}" class="styled-input"></div>
-          <div style="flex:1;"><div class="label">Accise</div><input type="number" step="0.0001" .value="${this._config.accise !== undefined ? this._config.accise : 0}" .configValue="${"accise"}" @input="${this._valueChanged}" class="styled-input"></div>
-        </div>
+        ${this._renderParamEditor('spread', 'Spread Energia', { unit: '€/kWh', step: 0.0001 })}
+        ${this._renderParamEditor('trasporto', 'Costo Trasporto', { unit: '€/kWh', step: 0.0001, auto: true })}
+        ${this._renderParamEditor('oneri', 'Oneri di Sistema (ASOS + ARIM)', { unit: '€/kWh', step: 0.0001, auto: true, second: 'ARIM' })}
+        ${this._renderParamEditor('accise', 'Accise', { unit: '€/kWh', step: 0.0001 })}
+        ${this._renderAutoSettings()}
 
         <div class="section">4. Costi Fissi Mensili (€/mese)</div>
         ${periodoFatturazione === 'bimestrale' ? html`<div class="hint" style="font-size:0.75rem; color: var(--secondary-text-color); margin: -5px 0 10px;">Inserisci i valori come costo <b>al mese</b>: la card li raddoppia automaticamente per il bimestre.</div>` : ''}
@@ -113,18 +111,12 @@ class ItalyEnergyBillCardEditor extends LitElement {
           ` : html`<input type="number" step="0.01" .value="${this._config.pcv !== undefined ? this._config.pcv : 0}" .configValue="${"pcv"}" @input="${this._valueChanged}" class="styled-input small" style="margin-top: 5px;">`}
         </div>
 
-        <div class="row">
-          <div style="flex:1;"><div class="label">Quota Fissa Rete/Oneri</div><input type="number" step="0.01" .value="${this._config.fissi_rete !== undefined ? this._config.fissi_rete : 0}" .configValue="${"fissi_rete"}" @input="${this._valueChanged}" class="styled-input"></div>
-        </div>
-        <div class="row" style="margin-top: 10px;">
-          <div style="flex:1;">
-            <div class="label">Potenza Contatore (kW)</div>
-            <select .value="${this._config.contatore_kw || 3}" .configValue="${"contatore_kw"}" @change="${this._valueChanged}" class="styled-select">
-              <option value="1.5">1.5 kW</option><option value="3">3 kW</option><option value="4.5">4.5 kW</option><option value="6">6 kW</option><option value="10">10 kW</option>
-            </select>
-          </div>
-          <div style="flex:1;"><div class="label">Costo Potenza (€/kW/mese)</div><input type="number" step="0.01" .value="${this._config.prezzo_kw !== undefined ? this._config.prezzo_kw : 1.98}" .configValue="${"prezzo_kw"}" @input="${this._valueChanged}" class="styled-input"></div>
-        </div>
+        ${this._renderParamEditor('fissi_rete', 'Quota Fissa Rete/Oneri', { unit: '€/mese', step: 0.01, auto: true })}
+        <div class="label">Potenza Contatore (kW)</div>
+        <select .value="${this._config.contatore_kw || 3}" .configValue="${"contatore_kw"}" @change="${this._valueChanged}" class="styled-select" style="margin-bottom: 10px;">
+          <option value="1.5">1.5 kW</option><option value="3">3 kW</option><option value="4.5">4.5 kW</option><option value="6">6 kW</option><option value="10">10 kW</option>
+        </select>
+        ${this._renderParamEditor('prezzo_kw', 'Costo Potenza', { unit: '€/kW/mese', step: 0.01, auto: true, fallback: 1.98 })}
         <div class="row" style="margin-top: 10px;">
           <div style="flex:1;"><div class="label">Canone TV/mese (Gen-Ott)</div><input type="number" step="0.01" .value="${this._config.canone_tv !== undefined ? this._config.canone_tv : 0}" .configValue="${"canone_tv"}" @input="${this._valueChanged}" class="styled-input"></div>
           <div style="flex:1;"></div>
@@ -161,6 +153,77 @@ class ItalyEnergyBillCardEditor extends LitElement {
     `;
   }
 
+  _anyAuto() {
+    return Object.keys(AUTO_PARAMS).some((n) => this._config['modo_' + n] === 'auto');
+  }
+
+  _ensureAreraData() {
+    const url = this._config.arera_url || DEFAULT_ARERA_URL;
+    if (AreraStore.isFresh(url) || this._areraLoading) return;
+    this._areraLoading = true;
+    AreraStore.load(url).then(() => { this._areraLoading = false; this.requestUpdate(); })
+      .catch(() => { this._areraLoading = false; });
+  }
+
+  _renderAutoSettings() {
+    if (!this._anyAuto()) return '';
+    this._ensureAreraData();
+    const tipo = this._config.tipo_utenza || 'residente';
+    return html`
+      <div class="price-box">
+        <div class="label" style="margin-bottom: 5px;">Tipo di utenza (per i valori automatici ARERA)</div>
+        <select .configValue="${"tipo_utenza"}" @change="${this._valueChanged}" class="styled-select small">
+          <option value="residente" ?selected="${tipo === 'residente'}">Abitazione di residenza anagrafica</option>
+          <option value="non_residente" ?selected="${tipo === 'non_residente'}">Abitazione diversa dalla residenza</option>
+        </select>
+        <div class="label" style="margin: 8px 0 5px;">URL dati ARERA (avanzato, opzionale)</div>
+        <input type="text" placeholder="${DEFAULT_ARERA_URL}" .value="${this._config.arera_url || ''}" .configValue="${"arera_url"}" @input="${this._valueChanged}" class="styled-input small">
+      </div>
+    `;
+  }
+
+  // Editor generico per un parametro con modalità: valore fisso / sensore / automatico (ARERA)
+  _renderParamEditor(name, label, opts = {}) {
+    const modo = this._config['modo_' + name] || 'val';
+    const manual = this._config[name] !== undefined ? this._config[name] : 0;
+    let body;
+    if (modo === 'ent') {
+      body = html`
+        <ha-entity-picker style="margin-top: 5px;" label="${opts.second ? 'Sensore ASOS' : 'Sensore'}" .hass="${this.hass}" .value="${this._config[name + '_entity']}" .configValue=${name + '_entity'} @value-changed="${this._valueChanged}"></ha-entity-picker>
+        ${opts.second ? html`<ha-entity-picker label="Sensore ${opts.second} (opzionale, viene sommato al primo)" .hass="${this.hass}" .value="${this._config[name + '_entity2']}" .configValue=${name + '_entity2'} @value-changed="${this._valueChanged}"></ha-entity-picker>` : ''}
+        <div class="hint">Il sensore deve essere in ${opts.unit}. Se non è disponibile si usa il valore fisso qui sotto.</div>
+        <div class="label" style="margin-top: 5px;">Valore di riserva (${opts.unit})</div>
+        <input type="number" step="${opts.step || 0.01}" .value="${manual}" .configValue="${name}" @input="${this._valueChanged}" class="styled-input small">
+      `;
+    } else if (modo === 'auto') {
+      this._ensureAreraData();
+      const found = getAutoValue(this._config, name);
+      body = html`
+        <div class="hint" style="margin-top: 5px;">
+          ${found
+            ? html`Valore attuale: <b>${found.value.toFixed(6)} ${opts.unit}</b> (periodo ${found.period}).`
+            : (AreraStore.failed ? 'Dati ARERA non raggiungibili al momento.' : 'Dati ARERA non ancora disponibili.')}
+          Se non è disponibile si usa il valore di riserva qui sotto.
+        </div>
+        <div class="label" style="margin-top: 5px;">Valore di riserva (${opts.unit})</div>
+        <input type="number" step="${opts.step || 0.01}" .value="${manual}" .configValue="${name}" @input="${this._valueChanged}" class="styled-input small">
+      `;
+    } else {
+      body = html`<input type="number" step="${opts.step || 0.01}" .value="${manual}" .configValue="${name}" @input="${this._valueChanged}" class="styled-input small" style="margin-top: 5px;">`;
+    }
+    return html`
+      <div class="price-box">
+        <div class="label" style="margin-bottom: 5px;">${label} (${opts.unit})</div>
+        <select .configValue="${'modo_' + name}" @change="${this._valueChanged}" class="styled-select small">
+          <option value="val" ?selected="${modo === 'val'}">Valore Fisso</option>
+          <option value="ent" ?selected="${modo === 'ent'}">Sensore (es. integrazione Bolletta)</option>
+          ${opts.auto ? html`<option value="auto" ?selected="${modo === 'auto'}">Automatico (ARERA)</option>` : ''}
+        </select>
+        ${body}
+      </div>
+    `;
+  }
+
   _renderPriceEditor(idx, label) {
     const modo = this._config['modo_p' + idx] || 'val';
     return html`
@@ -185,6 +248,7 @@ class ItalyEnergyBillCardEditor extends LitElement {
       .styled-input:focus { outline: none; border-color: var(--primary-color); }
       .small { font-size: 0.8rem; padding: 6px; }
       ha-entity-picker { margin-bottom: 10px; display: block; }
+      .hint { font-size: 0.75rem; color: var(--secondary-text-color); margin: 4px 0 6px; }
     `;
   }
 }
@@ -224,7 +288,7 @@ class ItalyEnergyBillCard extends LitElement {
   }
 
   setConfig(config) {
-    this.config = { title: "Costo Energia", tipo_costo: "mono", periodo_fatturazione: "mensile", modo_pcv: "val", pcv_spalma_mesi: 12, iva: 10, perdite_rete: 10, canone_tv: 0, contatore_kw: 3, prezzo_kw: 1.98, layout_compatto: false, bonus_enabled: false, bonus_valore_giorno: 0, ...config };
+    this.config = { title: "Costo Energia", tipo_costo: "mono", periodo_fatturazione: "mensile", modo_pcv: "val", pcv_spalma_mesi: 12, iva: 10, perdite_rete: 10, canone_tv: 0, contatore_kw: 3, prezzo_kw: 1.98, layout_compatto: false, bonus_enabled: false, bonus_valore_giorno: 0, tipo_utenza: "residente", ...config };
   }
 
   _toggleStats() {
@@ -249,6 +313,41 @@ class ItalyEnergyBillCard extends LitElement {
       return spalmaMesi > 0 ? (pcvSensore / spalmaMesi) : 0;
     }
     return parseFloat(this.config.pcv) || 0;
+  }
+
+  _entityNumber(entityId) {
+    const st = entityId ? this.hass.states[entityId] : null;
+    if (!st) return null;
+    const v = parseFloat(st.state);
+    return isNaN(v) ? null : v;
+  }
+
+  _ensureAreraData() {
+    const url = this.config.arera_url || DEFAULT_ARERA_URL;
+    if (AreraStore.isFresh(url) || this._areraLoading) return;
+    this._areraLoading = true;
+    AreraStore.load(url).then(() => { this._areraLoading = false; this.requestUpdate(); })
+      .catch(() => { this._areraLoading = false; });
+  }
+
+  // Valore di un parametro: sensore (`ent`), dati ARERA (`auto`) o valore fisso (`val`).
+  // Se la fonte non è disponibile si ricade sul valore fisso inserito.
+  _getParam(name) {
+    const manual = parseFloat(this.config[name]) || 0;
+    const modo = this.config['modo_' + name] || 'val';
+    if (modo === 'ent') {
+      const ids = [this.config[name + '_entity']];
+      if (name === 'oneri') ids.push(this.config.oneri_entity2);
+      const configured = ids.filter((id) => id);
+      if (!configured.length) return manual;
+      const values = configured.map((id) => this._entityNumber(id));
+      return values.some((v) => v === null) ? manual : values.reduce((a, b) => a + b, 0);
+    }
+    if (modo === 'auto') {
+      const found = getAutoValue(this.config, name);
+      return found ? found.value : manual;
+    }
+    return manual;
   }
 
   _getHistoricalValue(entityId) {
@@ -304,17 +403,18 @@ class ItalyEnergyBillCard extends LitElement {
     const p3 = isFasce ? this._getPrice(3) : p1;
     let prezzoMP = isFasce ? (p1 + p2 + p3) / 3 : p1; 
 
-    const spread = parseFloat(this.config.spread) || 0;
-    const trasporto = parseFloat(this.config.trasporto) || 0;
-    const oneri = parseFloat(this.config.oneri) || 0;
-    const accise = parseFloat(this.config.accise) || 0;
+    if (Object.keys(AUTO_PARAMS).some((n) => this.config['modo_' + n] === 'auto')) this._ensureAreraData();
+    const spread = this._getParam('spread');
+    const trasporto = this._getParam('trasporto');
+    const oneri = this._getParam('oneri');
+    const accise = this._getParam('accise');
     const totaleVariabiliExtra = spread + trasporto + oneri + accise;
 
     const pcvMensile = this._getPcvMensile();
     const kw = parseFloat(this.config.contatore_kw) || 3;
-    const prezzoKw = parseFloat(this.config.prezzo_kw) || 1.98;
+    const prezzoKw = this._getParam('prezzo_kw') || 1.98;
     const quotaPotenzaMensile = kw * prezzoKw;
-    const fissiReteMensile = parseFloat(this.config.fissi_rete) || 0;
+    const fissiReteMensile = this._getParam('fissi_rete');
     // I costi fissi sono inseriti/calcolati "al mese": si moltiplicano x2 se la fatturazione è bimestrale
     const pcv = pcvMensile * moltiplicatorePeriodo;
     const quotaPotenza = quotaPotenzaMensile * moltiplicatorePeriodo;

@@ -1,0 +1,40 @@
+name: Update ARERA data
+
+on:
+  schedule:
+    - cron: "0 6 5 * *"   # il 5 di ogni mese (il file ARERA ha un foglio per mese)
+  workflow_dispatch:
+  push:
+    branches:
+      - dev
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install openpyxl
+
+      - name: Update data/arera.json
+        run: python scripts/update_arera.py
+
+      - name: Commit changes
+        run: |
+          if [ -n "$(git status --porcelain data/arera.json)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add data/arera.json
+            git commit -m "chore: aggiorna parametri ARERA"
+            git push
+          else
+            echo "Nessuna variazione"
+          fi

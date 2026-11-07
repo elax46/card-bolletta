@@ -1,0 +1,332 @@
+{
+  "source": "ARERA - servizio a tutela graduale, clienti domestici non vulnerabili",
+  "updated": "2026-11-05T09:37:47Z",
+  "periods": {
+    "2024-07": {
+      "residente": {
+        "oneri_kwh": 0.038637
+      },
+      "non_residente": {
+        "oneri_kwh": 0.038637
+      }
+    },
+    "2024-08": {
+      "residente": {
+        "oneri_kwh": 0.038637
+      },
+      "non_residente": {
+        "oneri_kwh": 0.038637
+      }
+    },
+    "2024-09": {
+      "residente": {
+        "oneri_kwh": 0.038637
+      },
+      "non_residente": {
+        "oneri_kwh": 0.038637
+      }
+    },
+    "2024-10": {
+      "residente": {
+        "oneri_kwh": 0.038637
+      },
+      "non_residente": {
+        "oneri_kwh": 0.038637
+      }
+    },
+    "2024-11": {
+      "residente": {
+        "oneri_kwh": 0.038637
+      },
+      "non_residente": {
+        "oneri_kwh": 0.038637
+      }
+    },
+    "2024-12": {
+      "residente": {
+        "oneri_kwh": 0.038637
+      },
+      "non_residente": {
+        "oneri_kwh": 0.038637
+      }
+    },
+    "2025-01": {
+      "residente": {
+        "oneri_kwh": 0.032188
+      },
+      "non_residente": {
+        "oneri_kwh": 0.032188
+      }
+    },
+    "2025-02": {
+      "residente": {
+        "oneri_kwh": 0.032188
+      },
+      "non_residente": {
+        "oneri_kwh": 0.032188
+      }
+    },
+    "2025-03": {
+      "residente": {
+        "oneri_kwh": 0.032188
+      },
+      "non_residente": {
+        "oneri_kwh": 0.032188
+      }
+    },
+    "2025-04": {
+      "residente": {
+        "oneri_kwh": 0.031322
+      },
+      "non_residente": {
+        "oneri_kwh": 0.031322
+      }
+    },
+    "2025-05": {
+      "residente": {
+        "oneri_kwh": 0.031322
+      },
+      "non_residente": {
+        "oneri_kwh": 0.031322
+      }
+    },
+    "2025-06": {
+      "residente": {
+        "oneri_kwh": 0.031322,
+        "trasporto_kwh": 0.01352,
+        "quota_fissa_mese": 1.9,
+        "quota_potenza_kw_mese": 2.10656667
+      },
+      "non_residente": {
+        "oneri_kwh": 0.031322,
+        "trasporto_kwh": 0.01352,
+        "quota_fissa_mese": 1.9,
+        "quota_potenza_kw_mese": 2.10656667
+      }
+    },
+    "2025-07": {
+      "residente": {
+        "oneri_kwh": 0.031322,
+        "trasporto_kwh": 0.01352,
+        "quota_fissa_mese": 1.9,
+        "quota_potenza_kw_mese": 2.10656667
+      },
+      "non_residente": {
+        "oneri_kwh": 0.031322,
+        "trasporto_kwh": 0.01352,
+        "quota_fissa_mese": 1.9,
+        "quota_potenza_kw_mese": 2.10656667
+      }
+    },
+    "2025-08": {
+      "residente": {
+        "oneri_kwh": 0.031322,
+        "trasporto_kwh": 0.01352,
+        "quota_fissa_mese": 1.9,
+        "quota_potenza_kw_mese": 2.10656667
+      },
+      "non_residente": {
+        "oneri_kwh": 0.031322,
+        "trasporto_kwh": 0.01352,
+        "quota_fissa_mese": 1.9,
+        "quota_potenza_kw_mese": 2.10656667
+      }
+    },
+    "2025-09": {
+      "residente": {
+        "oneri_kwh": 0.031322,
+        "trasporto_kwh": 0.01352,
+        "quota_fissa_mese": 1.9,
+        "quota_potenza_kw_mese": 2.10656667
+      },
+      "non_residente": {
+        "oneri_kwh": 0.031322,
+        "trasporto_kwh": 0.01352,
+        "quota_fissa_mese": 1.9,
+        "quota_potenza_kw_mese": 2.10656667
+      }
+    },
+    "2025-10": {
+      "residente": {
+        "oneri_kwh": 0.031322,
+        "trasporto_kwh": 0.01352,
+        "quota_fissa_mese": 1.9,
+        "quota_potenza_kw_mese": 2.10656667
+      },
+      "non_residente": {
+        "oneri_kwh": 0.031322,
+        "trasporto_kwh": 0.01352,
+        "quota_fissa_mese": 1.9,
+        "quota_potenza_kw_mese": 2.10656667
+      }
+    },
+    "2025-11": {
+      "residente": {
+        "oneri_kwh": 0.031322,
+        "trasporto_kwh": 0.01352,
+        "quota_fissa_mese": 1.9,
+        "quota_potenza_kw_mese": 2.10656667
+      },
+      "non_residente": {
+        "oneri_kwh": 0.031322,
+        "trasporto_kwh": 0.01352,
+        "quota_fissa_mese": 1.9,
+        "quota_potenza_kw_mese": 2.10656667
+      }
+    },
+    "2025-12": {
+      "residente": {
+        "oneri_kwh": 0.031322,
+        "trasporto_kwh": 0.01352,
+        "quota_fissa_mese": 1.9,
+        "quota_potenza_kw_mese": 2.10656667
+      },
+      "non_residente": {
+        "oneri_kwh": 0.031322,
+        "trasporto_kwh": 0.01352,
+        "quota_fissa_mese": 1.9,
+        "quota_potenza_kw_mese": 2.10656667
+      }
+    },
+    "2026-01": {
+      "residente": {
+        "oneri_kwh": 0.030295,
+        "trasporto_kwh": 0.01473,
+        "quota_fissa_mese": 1.92,
+        "quota_potenza_kw_mese": 1.97656667
+      },
+      "non_residente": {
+        "oneri_kwh": 0.030295,
+        "trasporto_kwh": 0.01473,
+        "quota_fissa_mese": 1.92,
+        "quota_potenza_kw_mese": 1.97656667
+      }
+    },
+    "2026-02": {
+      "residente": {
+        "oneri_kwh": 0.030295,
+        "trasporto_kwh": 0.01473,
+        "quota_fissa_mese": 1.92,
+        "quota_potenza_kw_mese": 1.97656667
+      },
+      "non_residente": {
+        "oneri_kwh": 0.030295,
+        "trasporto_kwh": 0.01473,
+        "quota_fissa_mese": 1.92,
+        "quota_potenza_kw_mese": 1.97656667
+      }
+    },
+    "2026-03": {
+      "residente": {
+        "oneri_kwh": 0.030295,
+        "trasporto_kwh": 0.01473,
+        "quota_fissa_mese": 1.92,
+        "quota_potenza_kw_mese": 1.97656667
+      },
+      "non_residente": {
+        "oneri_kwh": 0.030295,
+        "trasporto_kwh": 0.01473,
+        "quota_fissa_mese": 1.92,
+        "quota_potenza_kw_mese": 1.97656667
+      }
+    },
+    "2026-04": {
+      "residente": {
+        "oneri_kwh": 0.030295,
+        "trasporto_kwh": 0.01473,
+        "quota_fissa_mese": 1.92,
+        "quota_potenza_kw_mese": 1.97656667
+      },
+      "non_residente": {
+        "oneri_kwh": 0.030295,
+        "trasporto_kwh": 0.01473,
+        "quota_fissa_mese": 1.92,
+        "quota_potenza_kw_mese": 1.97656667
+      }
+    },
+    "2026-05": {
+      "residente": {
+        "oneri_kwh": 0.030295,
+        "trasporto_kwh": 0.01473,
+        "quota_fissa_mese": 1.92,
+        "quota_potenza_kw_mese": 1.97656667
+      },
+      "non_residente": {
+        "oneri_kwh": 0.030295,
+        "trasporto_kwh": 0.01473,
+        "quota_fissa_mese": 1.92,
+        "quota_potenza_kw_mese": 1.97656667
+      }
+    },
+    "2026-06": {
+      "residente": {
+        "oneri_kwh": 0.030295,
+        "trasporto_kwh": 0.01473,
+        "quota_fissa_mese": 1.92,
+        "quota_potenza_kw_mese": 1.97656667
+      },
+      "non_residente": {
+        "oneri_kwh": 0.030295,
+        "trasporto_kwh": 0.01473,
+        "quota_fissa_mese": 1.92,
+        "quota_potenza_kw_mese": 1.97656667
+      }
+    },
+    "2026-07": {
+      "residente": {
+        "oneri_kwh": 0.033153,
+        "trasporto_kwh": 0.01473,
+        "quota_fissa_mese": 1.92,
+        "quota_potenza_kw_mese": 1.97656667
+      },
+      "non_residente": {
+        "oneri_kwh": 0.033153,
+        "trasporto_kwh": 0.01473,
+        "quota_fissa_mese": 1.92,
+        "quota_potenza_kw_mese": 1.97656667
+      }
+    },
+    "2026-08": {
+      "residente": {
+        "oneri_kwh": 0.033153,
+        "trasporto_kwh": 0.01473,
+        "quota_fissa_mese": 1.92,
+        "quota_potenza_kw_mese": 1.97656667
+      },
+      "non_residente": {
+        "oneri_kwh": 0.033153,
+        "trasporto_kwh": 0.01473,
+        "quota_fissa_mese": 1.92,
+        "quota_potenza_kw_mese": 1.97656667
+      }
+    },
+    "2026-09": {
+      "residente": {
+        "oneri_kwh": 0.033153,
+        "trasporto_kwh": 0.01473,
+        "quota_fissa_mese": 1.92,
+        "quota_potenza_kw_mese": 1.97656667
+      },
+      "non_residente": {
+        "oneri_kwh": 0.033153,
+        "trasporto_kwh": 0.01473,
+        "quota_fissa_mese": 1.92,
+        "quota_potenza_kw_mese": 1.97656667
+      }
+    },
+    "2026-10": {
+      "residente": {
+        "oneri_kwh": 0.033153,
+        "trasporto_kwh": 0.01473,
+        "quota_fissa_mese": 1.92,
+        "quota_potenza_kw_mese": 1.97656667
+      },
+      "non_residente": {
+        "oneri_kwh": 0.033153,
+        "trasporto_kwh": 0.01473,
+        "quota_fissa_mese": 1.92,
+        "quota_potenza_kw_mese": 1.97656667
+      }
+    }
+  }
+}
