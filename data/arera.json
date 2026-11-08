@@ -1,6 +1,6 @@
 {
   "source": "ARERA - servizio a tutela graduale, clienti domestici non vulnerabili",
-  "updated": "2026-11-05T09:37:47Z",
+  "updated": "2026-11-08T21:37:44Z",
   "periods": {
     "2024-07": {
       "residente": {
@@ -100,7 +100,7 @@
       "non_residente": {
         "oneri_kwh": 0.031322,
         "trasporto_kwh": 0.01352,
-        "quota_fissa_mese": 1.9,
+        "quota_fissa_mese": 9.4535,
         "quota_potenza_kw_mese": 2.10656667
       }
     },
@@ -114,7 +114,7 @@
       "non_residente": {
         "oneri_kwh": 0.031322,
         "trasporto_kwh": 0.01352,
-        "quota_fissa_mese": 1.9,
+        "quota_fissa_mese": 9.4535,
         "quota_potenza_kw_mese": 2.10656667
       }
     },
@@ -128,7 +128,7 @@
       "non_residente": {
         "oneri_kwh": 0.031322,
         "trasporto_kwh": 0.01352,
-        "quota_fissa_mese": 1.9,
+        "quota_fissa_mese": 9.4535,
         "quota_potenza_kw_mese": 2.10656667
       }
     },
@@ -142,7 +142,7 @@
       "non_residente": {
         "oneri_kwh": 0.031322,
         "trasporto_kwh": 0.01352,
-        "quota_fissa_mese": 1.9,
+        "quota_fissa_mese": 9.4535,
         "quota_potenza_kw_mese": 2.10656667
       }
     },
@@ -156,7 +156,7 @@
       "non_residente": {
         "oneri_kwh": 0.031322,
         "trasporto_kwh": 0.01352,
-        "quota_fissa_mese": 1.9,
+        "quota_fissa_mese": 9.4535,
         "quota_potenza_kw_mese": 2.10656667
       }
     },
@@ -170,7 +170,7 @@
       "non_residente": {
         "oneri_kwh": 0.031322,
         "trasporto_kwh": 0.01352,
-        "quota_fissa_mese": 1.9,
+        "quota_fissa_mese": 9.4535,
         "quota_potenza_kw_mese": 2.10656667
       }
     },
@@ -184,7 +184,7 @@
       "non_residente": {
         "oneri_kwh": 0.031322,
         "trasporto_kwh": 0.01352,
-        "quota_fissa_mese": 1.9,
+        "quota_fissa_mese": 9.4535,
         "quota_potenza_kw_mese": 2.10656667
       }
     },
@@ -198,7 +198,7 @@
       "non_residente": {
         "oneri_kwh": 0.030295,
         "trasporto_kwh": 0.01473,
-        "quota_fissa_mese": 1.92,
+        "quota_fissa_mese": 9.316,
         "quota_potenza_kw_mese": 1.97656667
       }
     },
@@ -212,7 +212,7 @@
       "non_residente": {
         "oneri_kwh": 0.030295,
         "trasporto_kwh": 0.01473,
-        "quota_fissa_mese": 1.92,
+        "quota_fissa_mese": 9.316,
         "quota_potenza_kw_mese": 1.97656667
       }
     },
@@ -226,7 +226,7 @@
       "non_residente": {
         "oneri_kwh": 0.030295,
         "trasporto_kwh": 0.01473,
-        "quota_fissa_mese": 1.92,
+        "quota_fissa_mese": 9.316,
         "quota_potenza_kw_mese": 1.97656667
       }
     },
@@ -240,7 +240,7 @@
       "non_residente": {
         "oneri_kwh": 0.030295,
         "trasporto_kwh": 0.01473,
-        "quota_fissa_mese": 1.92,
+        "quota_fissa_mese": 9.316,
         "quota_potenza_kw_mese": 1.97656667
       }
     },
@@ -254,7 +254,7 @@
       "non_residente": {
         "oneri_kwh": 0.030295,
         "trasporto_kwh": 0.01473,
-        "quota_fissa_mese": 1.92,
+        "quota_fissa_mese": 9.316,
         "quota_potenza_kw_mese": 1.97656667
       }
     },
@@ -268,7 +268,7 @@
       "non_residente": {
         "oneri_kwh": 0.030295,
         "trasporto_kwh": 0.01473,
-        "quota_fissa_mese": 1.92,
+        "quota_fissa_mese": 9.316,
         "quota_potenza_kw_mese": 1.97656667
       }
     },
@@ -282,7 +282,7 @@
       "non_residente": {
         "oneri_kwh": 0.033153,
         "trasporto_kwh": 0.01473,
-        "quota_fissa_mese": 1.92,
+        "quota_fissa_mese": 9.8443,
         "quota_potenza_kw_mese": 1.97656667
       }
     },
@@ -296,7 +296,7 @@
       "non_residente": {
         "oneri_kwh": 0.033153,
         "trasporto_kwh": 0.01473,
-        "quota_fissa_mese": 1.92,
+        "quota_fissa_mese": 9.8443,
         "quota_potenza_kw_mese": 1.97656667
       }
     },
@@ -310,7 +310,7 @@
       "non_residente": {
         "oneri_kwh": 0.033153,
         "trasporto_kwh": 0.01473,
-        "quota_fissa_mese": 1.92,
+        "quota_fissa_mese": 9.8443,
         "quota_potenza_kw_mese": 1.97656667
       }
     },
@@ -324,7 +324,7 @@
       "non_residente": {
         "oneri_kwh": 0.033153,
         "trasporto_kwh": 0.01473,
-        "quota_fissa_mese": 1.92,
+        "quota_fissa_mese": 9.8443,
         "quota_potenza_kw_mese": 1.97656667
       }
     }
