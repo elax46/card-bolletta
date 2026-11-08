@@ -183,7 +183,7 @@ bonus_valore_giorno: 0.51
 | `modo_spread`, `modo_accise` | Origine del valore: `val` (fisso) o `ent` (sensore) | `val` |
 | `trasporto_entity`, `oneri_entity`, `fissi_rete_entity`, `prezzo_kw_entity`, `spread_entity`, `accise_entity` | Entity ID del sensore (usato se la relativa `modo_*` è `ent`) | es. `sensor.arera_energy_sc1` |
 | `oneri_entity2` | (Opzionale) Secondo sensore per gli oneri: viene **sommato** a `oneri_entity` (utile per ASOS + ARIM) | es. `sensor.arera_arim_sc1` |
-| `tipo_utenza` | Tipo di utenza per i valori `auto` | `residente` o `non_residente` |
+| `tipo_utenza` | Tipo di abitazione per i valori `auto`: `residente` (residenza anagrafica) o `non_residente` (diversa dalla residenza). Cambia solo la quota fissa rete. | `residente` |
 | `arera_url` | (Avanzato) URL alternativo del JSON dei parametri ARERA usato in modalità `auto` | URL di `data/arera.json` di questo repository |
 | `bonus_enabled` | (Opzionale) Bonus Sociale | es. `bonus_enabled: true/false` |
 | `bonus_valore_giorno` | (Opzionale) Bonus giornaliero applicato per POD | es. `0.40` per il valore specifico fare riferimento alla tabella sul sito [Arera](https://www.arera.it/consumatori/bonus-sociale/bonus-sociale-per-disagio-economico/a-quanto-ammontano) |
@@ -224,6 +224,9 @@ prezzo_kw_entity: sensor.arera_quota_power
 ```
 
 > [!NOTE]
+> La tabella vale per le abitazioni di residenza: per le non residenti `sensor.arera_fix_quota_transport` non include la quota fissa degli oneri (ASOS), quindi la quota fissa rete risulta più bassa di circa 7,9 €/mese. In quel caso usa la modalità **Automatico (ARERA)** con `tipo_utenza: non_residente`.
+
+> [!NOTE]
 > Le accise e le perdite di rete esposte dall'integrazione (`sensor.portaleofferte_accisa_tax`, `sensor.portaleofferte_nw_loss_percentage`) potrebbero avere unità diverse da quelle della card (€/kWh e %): controlla il valore prima di usarle. Lo **Spread** è un valore del tuo contratto, non è fissato da ARERA: resta da inserire a mano o da un tuo sensore.
 
 ### Modalità automatica
@@ -232,7 +235,7 @@ Seleziona **Automatico (ARERA)** e, in sezione 3, il tipo di utenza (residente o
 
 I dati provengono dal file Excel ARERA del servizio a tutela graduale per i clienti domestici non vulnerabili, letto dallo script `scripts/update_arera.py`. La GitHub Action `update-arera.yml` lo esegue il 5 di ogni mese. Il parsing si basa sulla struttura attuale del file: se ARERA la cambia l'Action fallisce e va aggiornato lo script.
 
-Per la prima popolazione del file, o per forzare un aggiornamento: **Actions → Update ARERA data → Run workflow**.
+**Tipo di utenza.** Per le abitazioni diverse dalla residenza anagrafica la quota fissa rete include anche la quota fissa degli oneri di sistema (ASOS), che i residenti non pagano: a ottobre 2026 sono 9,84 €/mese contro 1,92 €/mese. Trasporto, oneri in €/kWh e costo potenza sono uguali per le due categorie.
 
 ---
 
@@ -254,6 +257,22 @@ Questa logica garantisce che il risparmio cresca proporzionalmente insieme ai tu
 > **Nota per la fatturazione Bimestrale:** se imposti `periodo_fatturazione: bimestrale`, la maturazione del bonus (e il confronto con il periodo precedente) viene calcolata sui giorni dell'intero bimestre (mese corrente + mese precedente), non sul singolo mese.
 
 > **Nota sul PCV da Sensore:** se `modo_pcv: ent`, il valore letto da `pcv_entity` viene prima diviso per `pcv_spalma_mesi` (per ottenere il costo mensile equivalente) e poi moltiplicato per 2 se `periodo_fatturazione` è `bimestrale`, esattamente come avviene per il PCV inserito manualmente.
+
+### Risoluzione problemi
+
+**"Dati ARERA non raggiungibili".** La card sta usando il valore di riserva. Controlla che il file sia raggiungibile aprendo nel browser:
+`https://raw.githubusercontent.com/elax46/card-bolletta/main/data/arera.json`
+Se usi `arera_url`, deve essere un indirizzo `raw.githubusercontent.com` (non la pagina `github.com/.../blob/...`).
+
+**I valori non si aggiornano.** I dati sono memorizzati nel browser per 12 ore. Per forzare l'aggiornamento apri la console del browser (F12), esegui:
+
+```js
+localStorage.removeItem('card-bolletta:arera:v1')
+```
+
+e ricarica la pagina con Ctrl+F5.
+
+**Controllare il periodo in uso.** Nell'editor, sotto ogni parametro automatico, compare il valore attuale con il periodo di riferimento (es. `2026-10`). Se il mese corrente non è ancora nei dati, la card usa l'ultimo periodo disponibile.
 
 ## 💻 Sviluppo
 
