@@ -7,8 +7,9 @@ di Sanji78 (https://github.com/Sanji78/bolletta, licenza MIT).
 Valori prodotti per ogni mese e per ogni tipo di utenza (residente / non_residente):
   trasporto_kwh          €/kWh     servizi di rete, quota energia
   oneri_kwh              €/kWh     ASOS + ARIM
-  quota_fissa_mese       €/mese    quota fissa trasporto (valore annuo / 12)
-  quota_potenza_kw_mese  €/kW/mese quota potenza (valore annuo / 12)
+  quota_fissa_mese       €/mese    quota fissa trasporto + quota fissa oneri ASOS/ARIM (valore annuo / 12);
+                                   la quota fissa di ASOS è prevista solo per le abitazioni non residenti
+  quota_potenza_kw_mese  €/kW/mese quota potenza trasporto + eventuale quota potenza oneri (valore annuo / 12)
 
 ATTENZIONE: il layout del file ARERA è letto con offset di righe relativi alle etichette,
 quindi va ricontrollato se ARERA cambia il formato. Lo script termina con errore
@@ -83,15 +84,17 @@ def extract(sheet, label):
 
     header = label_row + 1
     value_row = header + 3
-    asos = arim = servizi_col = None
+    asos = arim = servizi_col = asos_col = arim_col = None
     for c in range(1, sheet.max_column + 1):
         h = sheet.cell(row=header, column=c).value
         if h is None:
             continue
         text = " ".join(str(h).split()).lower()
-        if "asos" in text and asos is None:
+        if "asos" in text and asos_col is None:
+            asos_col = c
             asos = num(sheet.cell(row=value_row, column=c).value)
-        if "arim" in text and arim is None:
+        if "arim" in text and arim_col is None:
+            arim_col = c
             arim = num(sheet.cell(row=value_row, column=c).value)
         if "tariffa" in text and "rete" in text:
             servizi_col = c
@@ -104,10 +107,15 @@ def extract(sheet, label):
         potenza = num(sheet.cell(row=header + 5, column=servizi_col).value)
         if energia is not None:
             out["trasporto_kwh"] = round(energia, 8)
+        # Quota fissa e quota potenza degli oneri (ASOS/ARIM): '-' per i residenti,
+        # valorizzata per i non residenti (es. ASOS 95,0916 €/anno). '-' e celle vuote valgono 0.
+        oneri_cols = [c for c in (asos_col, arim_col) if c]
+        oneri_fissa = sum(num(sheet.cell(row=header + 4, column=c).value) or 0.0 for c in oneri_cols)
+        oneri_potenza = sum(num(sheet.cell(row=header + 5, column=c).value) or 0.0 for c in oneri_cols)
         if fissa is not None:
-            out["quota_fissa_mese"] = round(fissa / 12.0, 8)
+            out["quota_fissa_mese"] = round((fissa + oneri_fissa) / 12.0, 8)
         if potenza is not None:
-            out["quota_potenza_kw_mese"] = round(potenza / 12.0, 8)
+            out["quota_potenza_kw_mese"] = round((potenza + oneri_potenza) / 12.0, 8)
     return out
 
 
