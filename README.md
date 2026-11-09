@@ -233,30 +233,9 @@ prezzo_kw_entity: sensor.arera_quota_power
 
 Seleziona **Automatico (ARERA)** e, in sezione 3, il tipo di utenza (residente o no). La card scarica `data/arera.json` (con cache nel browser di 12 ore), usa il periodo del mese corrente oppure l'ultimo disponibile, e ricade sul valore di riserva se i dati non ci sono.
 
-I dati provengono dal file Excel ARERA del servizio a tutela graduale per i clienti domestici non vulnerabili, letto dallo script `scripts/update_arera.py`. La GitHub Action `update-arera.yml` lo esegue il 5 di ogni mese. Il parsing si basa sulla struttura attuale del file: se ARERA la cambia l'Action fallisce e va aggiornato lo script.
+I dati provengono dal file Excel ARERA del servizio a tutela graduale per i clienti domestici non vulnerabili, letto dallo script `scripts/update_arera.py`. La GitHub Action `update-arera.yml` lo esegue il 5 di ogni mese.
 
-**Tipo di utenza.** Per le abitazioni diverse dalla residenza anagrafica la quota fissa rete include anche la quota fissa degli oneri di sistema (ASOS), che i residenti non pagano: a ottobre 2026 sono 9,84 €/mese contro 1,92 €/mese. Trasporto, oneri in €/kWh e costo potenza sono uguali per le due categorie.
-
----
-
-## 💡 Nota sul Calcolo Dinamico (Bonus Sociale e Totale)
-
-La card è progettata per essere **dinamica** e riflettere la spesa reale accumulata fino al momento esatto in cui la consulti. 
-
-A differenza di una bolletta statica, la card aggiorna il calcolo del **Bonus Sociale ARERA** in modalità "pro-rata" (giorno per giorno). Questo evita di vedere un totale falsato all'inizio del mese e permette di monitorare l'andamento della spesa in tempo reale.
-
-### Esempio di calcolo
-Se la card mostra un valore che sembra non corrispondere alla semplice sottrazione del bonus mensile intero, è perché sta ragionando sulla maturazione giornaliera:
-
-> **Situazione ipotetica:**
-> - **Giorno attuale:** 12 del mese X (quindi 12 giorni di bonus maturati).
-> - **Sconto maturato:** $0,51€ \times 12 \text{ giorni} = \mathbf{6,12€}$
-
-Questa logica garantisce che il risparmio cresca proporzionalmente insieme ai tuoi consumi durante tutto l'arco del mese.
-
-> **Nota per la fatturazione Bimestrale:** se imposti `periodo_fatturazione: bimestrale`, la maturazione del bonus (e il confronto con il periodo precedente) viene calcolata sui giorni dell'intero bimestre (mese corrente + mese precedente), non sul singolo mese.
-
-> **Nota sul PCV da Sensore:** se `modo_pcv: ent`, il valore letto da `pcv_entity` viene prima diviso per `pcv_spalma_mesi` (per ottenere il costo mensile equivalente) e poi moltiplicato per 2 se `periodo_fatturazione` è `bimestrale`, esattamente come avviene per il PCV inserito manualmente.
+**Tipo di utenza.** Per le abitazioni diverse dalla residenza anagrafica la quota fissa rete include anche la quota fissa degli oneri di sistema (ASOS), che i residenti non pagano.
 
 ### Risoluzione problemi
 
@@ -273,6 +252,28 @@ localStorage.removeItem('card-bolletta:arera:v1')
 e ricarica la pagina con Ctrl+F5.
 
 **Controllare il periodo in uso.** Nell'editor, sotto ogni parametro automatico, compare il valore attuale con il periodo di riferimento (es. `2026-10`). Se il mese corrente non è ancora nei dati, la card usa l'ultimo periodo disponibile.
+
+---
+
+## 💡 Nota sul Calcolo Dinamico (Bonus Sociale e Totale)
+
+La card è progettata per essere **dinamica** e riflettere la spesa reale accumulata fino al momento esatto in cui la consulti. 
+
+A differenza di una bolletta statica, la card aggiorna il calcolo del **Bonus Sociale ARERA** in modalità "pro-rata" (giorno per giorno). Questo evita di vedere un totale falsato all'inizio del mese e permette di monitorare l'andamento della spesa in tempo reale.
+
+
+### Esempio di calcolo
+Se la card mostra un valore che sembra non corrispondere alla semplice sottrazione del bonus mensile intero, è perché sta ragionando sulla maturazione giornaliera:
+
+> **Situazione ipotetica:**
+> - **Giorno attuale:** 12 del mese X (quindi 12 giorni di bonus maturati).
+> - **Sconto maturato:** $0,51€ \times 12 \text{ giorni} = \mathbf{6,12€}$
+
+Questa logica garantisce che il risparmio cresca proporzionalmente insieme ai tuoi consumi durante tutto l'arco del mese.
+
+> **Nota per la fatturazione Bimestrale:** se imposti `periodo_fatturazione: bimestrale`, la maturazione del bonus (e il confronto con il periodo precedente) viene calcolata sui giorni dell'intero bimestre (mese corrente + mese precedente), non sul singolo mese.
+
+> **Nota sul PCV da Sensore:** se `modo_pcv: ent`, il valore letto da `pcv_entity` viene prima diviso per `pcv_spalma_mesi` (per ottenere il costo mensile equivalente) e poi moltiplicato per 2 se `periodo_fatturazione` è `bimestrale`, esattamente come avviene per il PCV inserito manualmente.
 
 ## 💻 Sviluppo
 
