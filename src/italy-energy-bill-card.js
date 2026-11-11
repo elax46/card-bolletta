@@ -1,6 +1,10 @@
 import { LitElement, html, css } from 'lit';
 import { AreraStore, AUTO_PARAMS, DEFAULT_ARERA_URL, getAutoValue } from './arera-data.js';
 
+// Livelli di potenza impegnata per i clienti domestici (ARERA):
+// da 0,5 a 6 kW a passi di 0,5 kW, da 6 a 10 kW a passi di 1 kW, poi 15, 20, 25 e 30 kW.
+const POTENZE_KW = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 7, 8, 9, 10, 15, 20, 25, 30];
+
 // --- EDITOR DELLA CARD (GUI) ---
 class ItalyEnergyBillCardEditor extends LitElement {
   static get properties() {
@@ -113,8 +117,8 @@ class ItalyEnergyBillCardEditor extends LitElement {
 
         ${this._renderParamEditor('fissi_rete', 'Quota Fissa Rete/Oneri', { unit: '€/mese', step: 0.01, auto: true })}
         <div class="label">Potenza Contatore (kW)</div>
-        <select .value="${this._config.contatore_kw || 3}" .configValue="${"contatore_kw"}" @change="${this._valueChanged}" class="styled-select" style="margin-bottom: 10px;">
-          <option value="1.5">1.5 kW</option><option value="3">3 kW</option><option value="4.5">4.5 kW</option><option value="6">6 kW</option><option value="10">10 kW</option>
+        <select .configValue="${"contatore_kw"}" @change="${this._valueChanged}" class="styled-select" style="margin-bottom: 10px;">
+          ${this._opzioniPotenza().map((kw) => html`<option value="${kw}" ?selected="${kw === (parseFloat(this._config.contatore_kw) || 3)}">${String(kw).replace('.', ',')} kW</option>`)}
         </select>
         ${this._renderParamEditor('prezzo_kw', 'Costo Potenza', { unit: '€/kW/mese', step: 0.01, auto: true, fallback: 1.98 })}
         <div class="row" style="margin-top: 10px;">
@@ -151,6 +155,17 @@ class ItalyEnergyBillCardEditor extends LitElement {
 
       </div>
     `;
+  }
+
+  // Livelli ARERA + l'eventuale valore personalizzato già presente nella configurazione (es. da YAML).
+  _opzioniPotenza() {
+    const corrente = parseFloat(this._config.contatore_kw);
+    const lista = POTENZE_KW.slice();
+    if (!isNaN(corrente) && corrente > 0 && !lista.includes(corrente)) {
+      lista.push(corrente);
+      lista.sort((a, b) => a - b);
+    }
+    return lista;
   }
 
   _anyAuto() {

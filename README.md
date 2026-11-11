@@ -173,7 +173,7 @@ bonus_valore_giorno: 0.51
 | `pcv_entity` | Entity ID del sensore PCV (usato se `modo_pcv: ent`), tipicamente un valore **annuale** | es. `sensor.pcv_annuale` |
 | `pcv_spalma_mesi` | Numero di mesi su cui dividere il valore letto da `pcv_entity` per ottenere il costo mensile (poi adattato al periodo di fatturazione) | 12 |
 | `fissi_rete` | Quota fissa Rete/Oneri (€/**mese**, raddoppiata in automatico se bimestrale) | 0 |
-| `contatore_kw` | Potenza impegnata contatore | 3 (es. 1.5, 3, 4.5, 6) |
+| `contatore_kw` | Potenza impegnata del contatore in kW. L'editor propone tutti i livelli ARERA (da 0,5 a 6 kW a passi di 0,5; poi 7, 8, 9, 10, 15, 20, 25, 30); in YAML accetta qualsiasi valore | 3 (es. 3.5) |
 | `prezzo_kw` | Costo mensile per kW di potenza impegnata (raddoppiato in automatico se bimestrale) | 1.98 |
 | `canone_tv` | Costo mensile canone RAI (valutato mese per mese sui mesi coperti dal periodo, utile per i bimestri a cavallo di Ottobre) | 0 (Imposta 9 può variare nel corso degli anni) |
 | `iva` | Aliquota IVA applicata (%) | 10 (o 22) |
@@ -227,15 +227,18 @@ prezzo_kw_entity: sensor.arera_quota_power
 > La tabella vale per le abitazioni di residenza: per le non residenti `sensor.arera_fix_quota_transport` non include la quota fissa degli oneri (ASOS), quindi la quota fissa rete risulta più bassa di circa 7,9 €/mese. In quel caso usa la modalità **Automatico (ARERA)** con `tipo_utenza: non_residente`.
 
 > [!NOTE]
+> Il valore ARERA del trasporto è il totale e comprende le componenti UC3 e UC6. Se nella tua bolletta compaiono come voci separate, confronta il totale prima di usare il valore automatico, per non contarle due volte.
+
+> [!NOTE]
 > Le accise e le perdite di rete esposte dall'integrazione (`sensor.portaleofferte_accisa_tax`, `sensor.portaleofferte_nw_loss_percentage`) potrebbero avere unità diverse da quelle della card (€/kWh e %): controlla il valore prima di usarle. Lo **Spread** è un valore del tuo contratto, non è fissato da ARERA: resta da inserire a mano o da un tuo sensore.
 
 ### Modalità automatica
 
 Seleziona **Automatico (ARERA)** e, in sezione 3, il tipo di utenza (residente o no). La card scarica `data/arera.json` (con cache nel browser di 12 ore), usa il periodo del mese corrente oppure l'ultimo disponibile, e ricade sul valore di riserva se i dati non ci sono.
 
-I dati provengono dal file Excel ARERA del servizio a tutela graduale per i clienti domestici non vulnerabili, letto dallo script `scripts/update_arera.py`. La GitHub Action `update-arera.yml` lo esegue il 5 di ogni mese.
+I dati provengono dal file Excel ARERA del servizio a tutela graduale per i clienti domestici non vulnerabili, letto dallo script `scripts/update_arera.py`, licenza MIT). La GitHub Action `update-arera.yml` lo esegue il 5 di ogni mese.
 
-**Tipo di utenza.** Per le abitazioni diverse dalla residenza anagrafica la quota fissa rete include anche la quota fissa degli oneri di sistema (ASOS), che i residenti non pagano.
+**Tipo di utenza.** Per le abitazioni diverse dalla residenza anagrafica la quota fissa rete include anche la quota fissa degli oneri di sistema (ASOS), che i residenti non pagano: a ottobre 2026 sono circa 9,84 €/mese contro 1,92 €/mese. Trasporto, oneri in €/kWh e costo potenza sono uguali per le due categorie.
 
 ### Risoluzione problemi
 
