@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { AreraStore, AUTO_PARAMS, DEFAULT_ARERA_URL, getAutoValue } from './arera-data.js';
+import { fetchStatisticSummary, listEnergyStatistics, STAT_REFRESH_MS } from './statistics.js';
 
 // Livelli di potenza impegnata per i clienti domestici (ARERA):
 // da 0,5 a 6 kW a passi di 0,5 kW, da 6 a 10 kW a passi di 1 kW, poi 15, 20, 25 e 30 kW.
@@ -68,10 +69,11 @@ class ItalyEnergyBillCardEditor extends LitElement {
         <div class="label">Sorgente Consumo</div>
         <select .value="${modoConsumo}" .configValue="${"modo_consumo"}" @change="${this._valueChanged}" class="styled-select small" style="margin-bottom: 10px;">
           <option value="ent">Sensore (Reale)</option>
+          <option value="stat">Statistica (es. Contatore Letture)</option>
           <option value="val">Valore Manuale (Test)</option>
         </select>
 
-        ${modoConsumo === 'ent' ? html`
+        ${modoConsumo === 'stat' ? this._renderStatisticEditor(periodoFatturazione) : modoConsumo === 'ent' ? html`
           <ha-entity-picker label="Sensore Consumo ${periodoFatturazione === 'bimestrale' ? 'Bimestrale' : 'Mensile'} (kWh)" .hass="${this.hass}" .value="${this._config.consumo_entity}" .configValue=${"consumo_entity"} @value-changed="${this._valueChanged}"></ha-entity-picker>
           ${periodoFatturazione === 'bimestrale' ? html`<div class="hint" style="font-size:0.75rem; color: var(--secondary-text-color); margin: -6px 0 10px;">Suggerimento: usa un sensore Utility Meter con ciclo di azzeramento Bimestrale per allineare i dati storici.</div>` : ''}
         ` : html`
@@ -153,6 +155,42 @@ class ItalyEnergyBillCardEditor extends LitElement {
         <ha-entity-picker label="Consumo Trimestrale" .hass="${this.hass}" .value="${this._config.consumo_trimestrale_entity}" .configValue=${"consumo_trimestrale_entity"} @value-changed="${this._valueChanged}"></ha-entity-picker>
         <ha-entity-picker label="Consumo Annuale" .hass="${this.hass}" .value="${this._config.consumo_annuale_entity}" .configValue=${"consumo_annuale_entity"} @value-changed="${this._valueChanged}"></ha-entity-picker>
 
+      </div>
+    `;
+  }
+
+  _loadStatistics() {
+    if (this._statList || this._statListLoading) return;
+    this._statListLoading = true;
+    listEnergyStatistics(this.hass)
+      .then((list) => { this._statList = list; this._statListError = false; })
+      .catch(() => { this._statList = []; this._statListError = true; })
+      .finally(() => { this._statListLoading = false; this.requestUpdate(); });
+  }
+
+  // Sorgente consumo da statistica a lungo termine (esterna o di un sensore)
+  _renderStatisticEditor(periodoFatturazione) {
+    this._loadStatistics();
+    const current = this._config.consumo_statistic || '';
+    const list = this._statList || [];
+    const known = list.some((s) => s.statistic_id === current);
+    const periodo = periodoFatturazione === 'bimestrale' ? 'del bimestre (Gen-Feb, Mar-Apr, ...)' : 'del mese';
+    return html`
+      <div class="label">Statistica di consumo (kWh, somma cumulativa)</div>
+      ${this._statListError ? html`
+        <input type="text" placeholder="contatore_letture:it001e00000000_energia" .value="${current}" .configValue="${"consumo_statistic"}" @input="${this._valueChanged}" class="styled-input small">
+        <div class="hint">Impossibile leggere l'elenco delle statistiche: inserisci a mano lo statistic_id.</div>
+      ` : html`
+        <select .configValue="${"consumo_statistic"}" @change="${this._valueChanged}" class="styled-select small">
+          <option value="" ?selected="${!current}">${this._statList ? '-- Seleziona una statistica --' : 'Caricamento...'}</option>
+          ${current && !known ? html`<option value="${current}" selected>${current}</option>` : ''}
+          ${list.map((s) => html`<option value="${s.statistic_id}" ?selected="${s.statistic_id === current}">${s.name ? `${s.name} (${s.statistic_id})` : s.statistic_id}</option>`)}
+        </select>
+      `}
+      <div class="hint">
+        La card calcola il consumo ${periodo} dalla statistica, insieme al periodo precedente e allo storico.
+        Le statistiche esterne (es. <code>contatore_letture:&lt;pod&gt;_energia</code>) arrivano spesso con 1-2 giorni di ritardo:
+        la card mostra la data dell'ultimo dato disponibile.
       </div>
     `;
   }
@@ -275,7 +313,9 @@ class ItalyEnergyBillCard extends LitElement {
     return { 
       hass: { type: Object }, 
       config: { type: Object },
-      _showStats: { state: true }
+      _showStats: { state: true },
+      _stat: { state: true },
+      _statError: { state: true }
     };
   }
 
@@ -365,6 +405,38 @@ class ItalyEnergyBillCard extends LitElement {
     return manual;
   }
 
+  // Carica (e rinfresca periodicamente) i consumi dalla statistica configurata.
+  _ensureStatistic() {
+    const id = this.config.consumo_statistic;
+    const bimestrale = this.config.periodo_fatturazione === 'bimestrale';
+    const key = `${id}|${bimestrale}`;
+    if (!id) { this._stat = null; this._statError = null; this._statKey = null; return; }
+    const fresh = this._statKey === key && (Date.now() - (this._statFetchedAt || 0)) < STAT_REFRESH_MS;
+    if (fresh || this._statLoading === key) return;
+    if (this._statKey !== key) { this._stat = null; this._statError = null; }
+    this._statLoading = key;
+    this._statKey = key;
+    this._statFetchedAt = Date.now();
+    fetchStatisticSummary(this.hass, id, bimestrale)
+      .then((summary) => {
+        if (this._statKey !== key) return;
+        this._stat = summary;
+        this._statError = summary.found ? null : 'Nessun dato trovato per la statistica';
+      })
+      .catch((err) => {
+        if (this._statKey !== key) return;
+        this._statError = (err && err.message) || 'Errore nella lettura della statistica';
+      })
+      .finally(() => { if (this._statLoading === key) this._statLoading = null; });
+  }
+
+  _statStatusText() {
+    if (this._statError) return this._statError;
+    if (!this._stat) return this.config.consumo_statistic ? 'Caricamento statistica...' : 'Nessuna statistica selezionata';
+    const last = this._stat.lastDay;
+    return last ? `Dati disponibili fino al ${last.date.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })}` : '';
+  }
+
   _getHistoricalValue(entityId) {
     if (!entityId || !this.hass.states[entityId]) return '--';
     const val = parseFloat(this.hass.states[entityId].state);
@@ -378,8 +450,15 @@ class ItalyEnergyBillCard extends LitElement {
     let consumoMesePrecedente = null;
     const mainEnt = this.hass.states[this.config.consumo_entity];
     
+    const daStatistica = this.config.modo_consumo === 'stat';
     if (this.config.modo_consumo === 'val') {
       consumo = parseFloat(this.config.consumo_val) || 0;
+    } else if (daStatistica) {
+      this._ensureStatistic();
+      if (this._stat) {
+        consumo = this._stat.current || 0;
+        consumoMesePrecedente = this._stat.previous;
+      }
     } else {
       if (mainEnt) {
         consumo = parseFloat(mainEnt.state) || 0;
@@ -401,16 +480,28 @@ class ItalyEnergyBillCard extends LitElement {
     const giorniMaturatiPeriodo = giornoCorrente + giorniMeseScorsoCompleto;
     const scontoBonusMaturato = bonusAbilitato ? (bonusGiorno * giorniMaturatiPeriodo) : 0;
 
+    // Con la sorgente "statistica" lo storico viene ricavato dalla statistica stessa,
+    // a meno che non sia stato configurato esplicitamente un sensore per quel periodo.
+    const statStorico = daStatistica && this._stat && this._stat.found ? this._stat : null;
     const hasHistoricalSensors = 
+      statStorico ||
       this.config.consumo_giornaliero_entity || 
       this.config.consumo_settimanale_entity || 
       this.config.consumo_trimestrale_entity || 
       this.config.consumo_annuale_entity;
 
-    const consGiornaliero = this._getHistoricalValue(this.config.consumo_giornaliero_entity);
-    const consSettimanale = this._getHistoricalValue(this.config.consumo_settimanale_entity);
-    const consTrimestrale = this._getHistoricalValue(this.config.consumo_trimestrale_entity);
-    const consAnnuale = this._getHistoricalValue(this.config.consumo_annuale_entity);
+    const storico = (entityId, statValue) => {
+      if (entityId || !statStorico) return this._getHistoricalValue(entityId);
+      return (statValue === null || statValue === undefined) ? '--' : statValue.toFixed(1);
+    };
+    const giornoDaStatistica = statStorico && !this.config.consumo_giornaliero_entity;
+    const consGiornaliero = storico(this.config.consumo_giornaliero_entity, statStorico && statStorico.lastDay ? statStorico.lastDay.value : null);
+    const consSettimanale = storico(this.config.consumo_settimanale_entity, statStorico && statStorico.week);
+    const consTrimestrale = storico(this.config.consumo_trimestrale_entity, statStorico && statStorico.quarter);
+    const consAnnuale = storico(this.config.consumo_annuale_entity, statStorico && statStorico.year);
+    const labelGiorno = giornoDaStatistica && statStorico.lastDay
+      ? statStorico.lastDay.date.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })
+      : 'Oggi';
 
     const isFasce = this.config.tipo_costo === 'fasce';
     const p1 = this._getPrice(1);
@@ -520,6 +611,7 @@ class ItalyEnergyBillCard extends LitElement {
               <span class="value">${totaleCorrente.toFixed(2)}</span>
             </div>
             <div class="month-label">Stima costi ${isBimestrale ? 'bimestre corrente' : 'correnti'} (IVA ${this.config.iva}% ${canoneTV > 0 ? '+ Canone' : ''})</div>
+            ${daStatistica ? html`<div class="month-label stat-status ${this._statError ? 'error' : ''}">${this._statStatusText()}</div>` : ''}
             
             <div class="divider"></div>
 
@@ -559,6 +651,7 @@ class ItalyEnergyBillCard extends LitElement {
                   <span>Statistiche e Storico</span>
                   <ha-icon icon="mdi:close" @click="${this._toggleStats}" class="close-btn"></ha-icon>
                 </div>
+                ${daStatistica ? html`<div class="month-label stat-status ${this._statError ? 'error' : ''}" style="margin: -5px 0 15px;">${this._statStatusText()}</div>` : ''}
                 
                 <div class="stats-section">
                 <div class="stats-title"><ha-icon icon="mdi:history" class="section-icon"></ha-icon> Confronto ${isBimestrale ? 'Bimestri' : 'Mesi'}</div>
@@ -566,7 +659,7 @@ class ItalyEnergyBillCard extends LitElement {
                     <div class="stats-col">
                         <span>${isBimestrale ? 'Bimestre' : 'Mese'} Scorso (Lordo)</span>
                         <b style="font-size: 1.1rem; color: var(--secondary-text-color);">${costoMesePrecedente}</b>
-                        <span style="margin-top: 2px;">(${consumoMesePrecedente !== null ? consumoMesePrecedente + ' kWh' : '--'})</span>
+                        <span style="margin-top: 2px;">(${consumoMesePrecedente !== null && !isNaN(consumoMesePrecedente) ? Number(consumoMesePrecedente).toFixed(1) + ' kWh' : '--'})</span>
                     </div>
                     <div class="stats-col highlight">
                         <span>${isBimestrale ? 'Bimestre' : 'Mese'} Corrente</span>
@@ -580,7 +673,7 @@ class ItalyEnergyBillCard extends LitElement {
                   <div class="stats-section">
                   <div class="stats-title"><ha-icon icon="mdi:calendar-clock" class="section-icon"></ha-icon> Storico Consumi e Stime</div>
                   <div class="stats-grid grid-4">
-                      <div class="stats-col"><span>Oggi</span><b>${stimaCostoStorico(consGiornaliero)}</b><span class="small-unit">${consGiornaliero} kWh</span></div>
+                      <div class="stats-col"><span>${labelGiorno}</span><b>${stimaCostoStorico(consGiornaliero)}</b><span class="small-unit">${consGiornaliero} kWh</span></div>
                       <div class="stats-col"><span>Settimana</span><b>${stimaCostoStorico(consSettimanale)}</b><span class="small-unit">${consSettimanale} kWh</span></div>
                       <div class="stats-col"><span>Trimestre</span><b>${stimaCostoStorico(consTrimestrale)}</b><span class="small-unit">${consTrimestrale} kWh</span></div>
                       <div class="stats-col"><span>Anno</span><b>${stimaCostoStorico(consAnnuale)}</b><span class="small-unit">${consAnnuale} kWh</span></div>
@@ -625,7 +718,9 @@ class ItalyEnergyBillCard extends LitElement {
                 </div>
 
                 <div class="disclaimer-stats" style="font-size: 0.7rem; color: var(--secondary-text-color); text-align: center; margin-top: 15px; font-style: italic; border-top: 1px solid var(--divider-color); padding-top: 10px;">
-                  I dati storici si basano sui sensori "Utility Meter" di Home Assistant. Le stime dei periodi (Giorno/Settimana/Ecc.) sono calcolate in base al costo medio al kWh del mese in corso.
+                  ${daStatistica
+                    ? `I consumi provengono dalla statistica ${this.config.consumo_statistic || ''}: lo storico mostra l'ultimo giorno disponibile, la settimana, il trimestre e l'anno correnti.`
+                    : 'I dati storici si basano sui sensori "Utility Meter" di Home Assistant.'} Le stime dei periodi (Giorno/Settimana/Ecc.) sono calcolate in base al costo medio al kWh del mese in corso.
                 </div>
             </div>
           </div>
@@ -658,6 +753,8 @@ class ItalyEnergyBillCard extends LitElement {
       .value { font-size: 4rem; font-weight: 800; line-height: 1; color: inherit !important; }
       
       .month-label { text-align: center; color: var(--secondary-text-color); font-size: 0.8rem; margin-top: 5px; }
+      .stat-status { font-size: 0.7rem; font-style: italic; }
+      .stat-status.error { color: var(--error-color, #db4437); font-style: normal; }
       .divider { height: 1px; background: var(--divider-color); margin: 20px 0; opacity: 0.4; }
       .info-grid { display: flex; justify-content: space-around; }
       .info-block { text-align: center; }

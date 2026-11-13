@@ -61,6 +61,7 @@ Una custom card per **Home Assistant** progettata specificamente per il mercato 
 * **Auto-rilevamento Mese Precedente:** Legge in automatico l'attributo `last_period` dei tuoi Utility Meter per dirti quanto hai speso il mese scorso.
 * **Periodo di Fatturazione Configurabile:** Supporta sia contratti con bolletta **Mensile** che **Bimestrale**, raddoppiando in automatico i costi fissi (PCV, quota potenza, quota fissa rete) e adattando canone TV e bonus sociale quando selezioni il bimestrale.
 * **Parametri ARERA automatici:** Trasporto, Oneri di Sistema, Quota fissa rete e Costo potenza possono essere aggiornati in automatico ogni mese/trimestre, oppure letti da sensori tuoi. Vedi la sezione [Aggiornamento automatico dei parametri ARERA](#-aggiornamento-automatico-dei-parametri-arera).
+* **Consumi da Statistiche (anche esterne):** Oltre a un sensore, il consumo può essere letto dalle statistiche a lungo termine di Home Assistant, comprese quelle **esterne** importate da integrazioni come [Contatore Letture](https://github.com/riccardorossi92/HomeAssistant-Contatore) (dati ufficiali del distributore). Vedi [Consumi da statistiche](#-consumi-da-statistiche-esterne).
 * **PCV da Sensore:** Oltre al valore fisso, il costo di Commercializzazione (PCV) può essere letto da un sensore (es. un valore annuale) e "spalmato" automaticamente sul numero di mesi indicato, adattandosi poi al periodo di fatturazione scelto.
 
 ---
@@ -111,7 +112,7 @@ Il modo più semplice per usare la card è tramite l'interfaccia grafica (Editor
 3. Scorri fino in fondo (o cerca) e seleziona **Custom: Card Bolletta**.
 4. Si aprirà l'interfaccia di configurazione:
    * **Periodo di Fatturazione:** Scegli "Mensile" o "Bimestrale" a seconda del tuo contratto. I valori dei costi fissi vanno sempre inseriti "al mese": se scegli Bimestrale la card li raddoppia da sola.
-   * **Sezione 1:** Scegli "Sensore (Reale)" e seleziona il tuo sensore Utility Meter (mensile o bimestrale, coerente con il periodo scelto sopra).
+   * **Sezione 1:** Scegli "Sensore (Reale)" e seleziona il tuo sensore Utility Meter (mensile o bimestrale, coerente con il periodo scelto sopra), oppure "Statistica" e seleziona una statistica di energia (es. quella dell'integrazione Contatore Letture).
    * **Sezione 2, 3, 4, 5:** Compila i campi inserendo i dati del tuo contratto luce (PCV, Spread, Oneri, ecc.). Se hai un costo fisso dell'energia, seleziona "Prezzo Fisso". Se hai il PUN, seleziona "Sensore" e cerca la tua entità del PUN. Anche il costo di **Commercializzazione (PCV)** può essere impostato come valore fisso o letto da un sensore (utile se il tuo fornitore espone un sensore con il costo annuale).
    * **Sezione 6 (Opzionale):** Inserisci qui i tuoi Utility Meter Giornalieri, Settimanali, ecc., se vuoi vederli nel pannello delle statistiche.
 5. Clicca su **Salva**.
@@ -161,8 +162,9 @@ bonus_valore_giorno: 0.51
 |---|---|---|
 | `title` | Titolo della card | "Costo Energia" |
 | `periodo_fatturazione` | Periodo di fatturazione del contratto | `mensile` o `bimestrale` |
-| `modo_consumo` | Origine del consumo principale | `ent` (Sensore) o `val` (Testuale) |
+| `modo_consumo` | Origine del consumo principale | `ent` (Sensore), `stat` (Statistica) o `val` (Testuale) |
 | `consumo_entity` | Entity ID del consumo (mensile o bimestrale, coerente con `periodo_fatturazione`) | es. `sensor.consumo_mese` |
+| `consumo_statistic` | statistic_id della statistica di energia (usato se `modo_consumo: stat`). Può essere una statistica esterna o quella di un sensore con somma cumulativa | es. `contatore_letture:it001e12345678_energia` |
 | `tipo_costo` | Tipo di tariffazione | `mono` (Monoraria) o `fasce` (F1/F2/F3) |
 | `modo_p1`, `p2`, `p3` | Origine del prezzo (F1, F2, F3 o Mono) | `val` (Fisso) o `ent` (Sensore es. PUN) |
 | `p1_ent`, `p1_val` | Entity ID o Valore fisso del prezzo | es. `sensor.pun` o `0.15` |
@@ -187,6 +189,30 @@ bonus_valore_giorno: 0.51
 | `arera_url` | (Avanzato) URL alternativo del JSON dei parametri ARERA usato in modalità `auto` | URL di `data/arera.json` di questo repository |
 | `bonus_enabled` | (Opzionale) Bonus Sociale | es. `bonus_enabled: true/false` |
 | `bonus_valore_giorno` | (Opzionale) Bonus giornaliero applicato per POD | es. `0.40` per il valore specifico fare riferimento alla tabella sul sito [Arera](https://www.arera.it/consumatori/bonus-sociale/bonus-sociale-per-disagio-economico/a-quanto-ammontano) |
+
+---
+
+## 📊 Consumi da statistiche (esterne)
+
+Alcune integrazioni non creano un sensore di consumo, ma scrivono i dati direttamente nelle **statistiche a lungo termine** di Home Assistant (le stesse usate dalla Dashboard Energia). È il caso di [Contatore Letture](https://github.com/riccardorossi92/HomeAssistant-Contatore), che importa le letture ufficiali del distributore (E-Distribuzione, Areti, Unareti, ...) nella statistica esterna `contatore_letture:<pod>_energia`.
+
+Con `modo_consumo: stat` la card legge la statistica e calcola da sola:
+
+* il consumo del **periodo corrente** (mese, oppure bimestre di calendario Gen-Feb, Mar-Apr, ... se `periodo_fatturazione: bimestrale`);
+* il consumo del **periodo precedente**, per il confronto nelle statistiche;
+* lo **storico** (ultimo giorno disponibile, settimana, trimestre e anno correnti), senza bisogno di altri Utility Meter. Se nella sezione "Sensori Storici" configuri un sensore, per quel periodo ha la precedenza.
+
+```yaml
+type: custom:italy-energy-bill-card
+modo_consumo: stat
+consumo_statistic: contatore_letture:it001e12345678_energia
+periodo_fatturazione: mensile
+```
+
+Nell'editor visuale scegli **Statistica** come sorgente consumo: il menu elenca tutte le statistiche di energia con somma cumulativa (prima quelle esterne). Funziona anche con le statistiche di un normale sensore (es. `sensor.consumo_totale` con `state_class: total_increasing`).
+
+> [!NOTE]
+> I dati dei distributori arrivano in ritardo (di solito 1-2 giorni, fino a un mese per chi pubblica a mese chiuso): la card mostra sotto il totale la data dell'ultimo dato disponibile. Il bonus sociale continua invece a maturare fino al giorno corrente. La statistica viene riletta ogni 15 minuti.
 
 ---
 
